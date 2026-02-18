@@ -1,0 +1,19 @@
+{
+    "bbsaaa.ui.forms.categories.aaa_particles": "AAA Particles",
+    "bbsaaa.ui.forms.editors.aaa_particle.title": "AAA Particle",
+    "bbsaaa.ui.forms.editors.aaa_particle.effect": "Effect",
+    "bbsaaa.ui.forms.editors.aaa_particle.bone": "Bone",
+    "bbsaaa.ui.forms.editors.aaa_particle.bone.tooltip": "Bone to attach the particle to",
+    "bbsaaa.ui.forms.editors.aaa_particle.paused": "Paused",
+    "bbsaaa.ui.forms.editors.aaa_particle.restart": "Restart",
+    "bbsaaa.ui.forms.editors.aaa_particle.loop": "Loop",
+    "bbsaaa.ui.forms.editors.aaa_particle.loop.tooltip": "Whether the particle should loop",
+    "bbsaaa.ui.forms.editors.aaa_particle.duration": "Duration",
+    "bbsaaa.ui.forms.editors.aaa_particle.duration.tooltip": "Duration of the particle in ticks",
+    "bbsaaa.ui.forms.editors.aaa_particle.speed": "Speed",
+    "bbsaaa.ui.forms.editors.aaa_particle.scale": "Scale",
+    "bbsaaa.ui.forms.editors.aaa_particle.sorting_layer": "Sorting Layer",
+    "bbsaaa.ui.forms.editors.aaa_particle.world_space": "World Space",
+    "bbsaaa.ui.forms.editors.aaa_particle.world_space.tooltip": "Whether the particle renders in world space",
+    "bbsaaa.ui.forms.editors.aaa_particle.preview": "Preview"
+}

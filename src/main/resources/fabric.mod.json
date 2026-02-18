@@ -1,0 +1,41 @@
+{
+	"schemaVersion": 1,
+	"id": "bbs-aaaddon",
+	"version": "${version}",
+	"name": "BBS AAaddon",
+	"description": "BBS Addon for AAAparticle",
+	"authors": [
+		"Diobede the sigma"
+	],
+	"contact": {
+		"homepage": "",
+		"sources": ""
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/bbs-aaaddon/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"diobede.bbsaaa.BBSAAaddon"
+		],
+		"client": [
+			"diobede.bbsaaa.BbsAAClientAddon"
+		],
+		"bbs-addon": [
+			"diobede.bbsaaa.addon.BbsAAAddon"
+		],
+		"bbs-addon-client": [
+			"diobede.bbsaaa.BbsAAClientAddon"
+		]
+	},
+	"mixins": [
+		"bbs-aaaddon.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.18.4",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*",
+		"bbs": "*"
+	}
+}
