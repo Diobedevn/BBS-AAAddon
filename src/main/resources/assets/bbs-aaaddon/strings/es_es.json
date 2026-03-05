@@ -17,6 +17,6 @@
     "bbsaaa.ui.forms.editors.aaa_particle.world_space": "Espacio del Mundo",
     "bbsaaa.ui.forms.editors.aaa_particle.world_space.tooltip": "Si la partícula se renderiza en el espacio del mundo",
     "bbsaaa.ui.forms.editors.aaa_particle.preview": "Vista Previa",
-    "bbsaaa.ui.forms.editors.aaa_particle.pick_effect": "Seleccionar Efecto AAA",
+    "bbsaaa.ui.forms.editors.aaa_particle.pick_effect": "Seleccionar AAA",
     "bbsaaa.ui.forms.editors.aaa_particle.select_effect": "Seleccionar Efecto AAA"
 }

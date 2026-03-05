@@ -566,34 +566,40 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
         }
         
         /* Force update if paused (e.g. in Form Editor) */
-        if (MinecraftClient.getInstance().isPaused()) {
-            if (isPreview) {
-                  /* In Form Editor, we need to advance progress manually because game is paused */
-                  long now = System.currentTimeMillis();
-                  
-                  if (this.lastEditorTime == 0) {
-                      this.lastEditorTime = now;
-                  }
-                  
-                  long timeDiff = now - this.lastEditorTime;
-                  this.lastEditorTime = now;
-                  
-                  /* Convert ms to frames (60fps) */
-                  float framesToAdd = timeDiff / 1000f * 60f;
-                  
-                  /* Clamp to avoid huge jumps or negatives */
-                  if (framesToAdd > 10f) framesToAdd = 1f;
-                  if (framesToAdd < 0f) framesToAdd = 0f;
-                  
-                  this.editorProgress += framesToAdd;
-                  
-                  this.emitter.setProgress(this.editorProgress);
-             } else {
-                 this.emitter.setProgress(this.currentTick * 3f + context.transition * 3f);
+        if (MinecraftClient.getInstance().isPaused())
+        {
+            if (isPreview)
+            {
+                long now = System.currentTimeMillis();
+
+                if (this.lastEditorTime == 0)
+                {
+                    this.lastEditorTime = now;
+                }
+
+                long timeDiff = now - this.lastEditorTime;
+                this.lastEditorTime = now;
+
+                float framesToAdd = timeDiff / 1000f * 60f;
+
+                if (framesToAdd > 10f)
+                {
+                    framesToAdd = 1f;
+                }
+
+                if (framesToAdd < 0f)
+                {
+                    framesToAdd = 0f;
+                }
+
+                this.editorProgress += framesToAdd;
+
+                this.emitter.setProgress(this.editorProgress);
             }
-        } else {
-             /* Reset editor time tracking when not paused */
-             this.lastEditorTime = 0;
+        }
+        else
+        {
+            this.lastEditorTime = 0;
         }
     }
 
