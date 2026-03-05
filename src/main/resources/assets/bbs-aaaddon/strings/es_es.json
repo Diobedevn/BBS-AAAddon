@@ -1,0 +1,22 @@
+{
+    "bbsaaa.ui.forms.categories.aaa_particles": "Particulas AAA",
+    "bbsaaa.ui.forms.editors.aaa_particle.title": "Particula AAA",
+    "bbsaaa.ui.forms.editors.aaa_particle.effect": "Efecto",
+    "bbsaaa.ui.forms.editors.aaa_particle.bone": "Hueso",
+    "bbsaaa.ui.forms.editors.aaa_particle.bone.tooltip": "Hueso al que se fija la partícula",
+    "bbsaaa.ui.forms.editors.aaa_particle.paused": "Pausado",
+    "bbsaaa.ui.forms.editors.aaa_particle.restart": "Reiniciar",
+    "bbsaaa.ui.forms.editors.aaa_particle.loop": "Bucle",
+    "bbsaaa.ui.forms.editors.aaa_particle.loop.tooltip": "Si la partícula debe repetirse",
+    "bbsaaa.ui.forms.editors.aaa_particle.duration": "Duración",
+    "bbsaaa.ui.forms.editors.aaa_particle.duration.tooltip": "Duración de la particula en ticks",
+    "bbsaaa.ui.forms.editors.aaa_particle.speed": "Velocidad",
+    "bbsaaa.ui.forms.editors.aaa_particle.scale": "Escala",
+    "bbsaaa.ui.forms.editors.aaa_particle.sorting_layer": "Capa de Renderizado",
+    "bbsaaa.ui.forms.editors.aaa_particle.sorting_layer.tooltip": "Capa de renderizado de la particula",
+    "bbsaaa.ui.forms.editors.aaa_particle.world_space": "Espacio del Mundo",
+    "bbsaaa.ui.forms.editors.aaa_particle.world_space.tooltip": "Si la partícula se renderiza en el espacio del mundo",
+    "bbsaaa.ui.forms.editors.aaa_particle.preview": "Vista Previa",
+    "bbsaaa.ui.forms.editors.aaa_particle.pick_effect": "Seleccionar Efecto AAA",
+    "bbsaaa.ui.forms.editors.aaa_particle.select_effect": "Seleccionar Efecto AAA"
+}

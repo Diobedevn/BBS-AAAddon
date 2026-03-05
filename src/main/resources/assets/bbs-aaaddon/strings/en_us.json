@@ -15,5 +15,7 @@
     "bbsaaa.ui.forms.editors.aaa_particle.sorting_layer": "Sorting Layer",
     "bbsaaa.ui.forms.editors.aaa_particle.world_space": "World Space",
     "bbsaaa.ui.forms.editors.aaa_particle.world_space.tooltip": "Whether the particle renders in world space",
-    "bbsaaa.ui.forms.editors.aaa_particle.preview": "Preview"
+    "bbsaaa.ui.forms.editors.aaa_particle.preview": "Preview",
+    "bbsaaa.ui.forms.editors.aaa_particle.pick_effect": "Pick Effect",
+    "bbsaaa.ui.forms.editors.aaa_particle.select_effect": "Select AAA Effect"
 }
