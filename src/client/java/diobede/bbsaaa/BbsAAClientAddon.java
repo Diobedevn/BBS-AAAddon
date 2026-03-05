@@ -76,6 +76,20 @@ public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitial
             {
                 e.printStackTrace();
             }
+
+            try
+            {
+                if (BBSModClient.getFormCategories() != null &&
+                    BBSModClient.getFormCategories().getExtraForms() != null &&
+                    BBSModClient.getFormCategories().getExtraForms().getExtraCategory() != null)
+                {
+                    BBSModClient.getFormCategories().getExtraForms().getExtraCategory().addForm(new AAAParticleForm());
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
         });
     }
 

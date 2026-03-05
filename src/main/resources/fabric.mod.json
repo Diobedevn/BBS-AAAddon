@@ -28,9 +28,6 @@
 			"diobede.bbsaaa.BbsAAClientAddon"
 		]
 	},
-	"mixins": [
-		"bbs-aaaddon.mixins.json"
-	],
 	"depends": {
 		"fabricloader": ">=0.18.4",
 		"minecraft": "~1.20.1",
