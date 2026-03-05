@@ -43,14 +43,11 @@ public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitial
             }
         });
         
-        /* Manual registration fallback in case event bus fails or timing is off */
         ClientLifecycleEvents.CLIENT_STARTED.register(client ->
         {
             try
             {
-                 /* Manually register renderer */
                  FormUtilsClient.register(AAAParticleForm.class, AAAParticleFormRenderer::new);
-                 /* Manually register panel */
                  UIFormEditor.register(AAAParticleForm.class, UIAAAParticleForm::new);
             }
             catch (Exception e)
@@ -71,6 +68,18 @@ public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitial
                     new Link("bbs-aaaddon", "strings/" + lang + ".json")
                 ));
                 BBSModClient.getL10n().reload();
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
+            try
+            {
+                if (BBSMod.getForms() != null)
+                {
+                    BBSMod.getForms().register(Link.bbs("aaa_particle"), AAAParticleForm.class);
+                }
             }
             catch (Exception e)
             {

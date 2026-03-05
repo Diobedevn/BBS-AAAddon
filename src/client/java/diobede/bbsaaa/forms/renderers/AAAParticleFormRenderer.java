@@ -14,6 +14,7 @@ import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.joml.Vectors;
+import mchorse.bbs_mod.graphics.texture.Texture;
 import mod.chloeprime.aaaparticles.api.client.effekseer.ParticleEmitter;
 import mod.chloeprime.aaaparticles.client.registry.EffectDefinition;
 import mod.chloeprime.aaaparticles.client.registry.EffectRegistry;
@@ -46,6 +47,37 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
 {
     /* Global registry of active renderers to ensure cleanup */
     public static final List<AAAParticleFormRenderer> activeRenderers = Collections.synchronizedList(new ArrayList<>());
+
+    public static final Link ICON = new Link("bbs-aaaddon", "textures/aaa_texture.png");
+
+    @Override
+    public void renderInUI(UIContext context, int x1, int y1, int x2, int y2)
+    {
+        Texture texture = context.render.getTextures().getTexture(ICON);
+
+        if (texture == null)
+        {
+            return;
+        }
+
+        float min = Math.min(texture.width, texture.height);
+
+        if (min <= 0)
+        {
+            min = 1;
+        }
+
+        int ow = (x2 - x1) - 4;
+        int oh = (y2 - y1) - 4;
+
+        int w = (int) ((texture.width / min) * ow);
+        int h = (int) ((texture.height / min) * ow);
+
+        int x = x1 + (ow - w) / 2 + 2;
+        int y = y1 + (oh - h) / 2 + 2;
+
+        context.batcher.fullTexturedBox(texture, x, y, w, h);
+    }
     
     /* Tick memory system - stores particle state per tick for film seeking */
     private static class ParticleState
@@ -275,38 +307,6 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
         this.lastTick = -1;
         
         activeRenderers.remove(this);
-    }
-
-    @Override
-    protected void renderInUI(UIContext context, int x1, int y1, int x2, int y2)
-    {
-        Link preview = this.form.preview.get();
-
-        if (preview != null)
-        {
-            /* Render the preview texture */
-            context.batcher.texturedBox(
-                BBSModClient.getTextures().getTexture(preview),
-                Colors.WHITE,
-                x1, y1, x2 - x1, y2 - y1,
-                0, 0, 1, 1
-            );
-        }
-        else
-        {
-            /* Fallback to particle icon */
-            int cx = (x1 + x2) / 2;
-            int cy = (y1 + y2) / 2;
-            int size = Math.min(x2 - x1, y2 - y1) / 3;
-
-            context.batcher.iconArea(
-                mchorse.bbs_mod.ui.utils.icons.Icons.PARTICLE,
-                cx - size / 2,
-                cy - size / 2,
-                cx + size / 2,
-                cy + size / 2
-            );
-        }
     }
 
     @Override
