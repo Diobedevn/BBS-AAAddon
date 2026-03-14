@@ -32,6 +32,16 @@ loom {
 	}
 
 }
+configurations.all {
+    resolutionStrategy {
+        eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'org.lwjgl') {
+                details.useVersion '3.3.1'
+            }
+        }
+    }
+}
+
 
 fabricApi {
 	configureDataGeneration {

@@ -113,6 +113,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
     private boolean loggedDebug = false;
     private float editorProgress = 0f;
     private long lastEditorTime = 0;
+    private long lastFrameTime = 0;
     
     /* Unique identifier for named emitters */
     private final Identifier emitterName;
@@ -268,6 +269,8 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
         }
 
         /* Update pause state - pause particle when film is paused OR when paused property is true */
+        /* Note: We do NOT pause when manual speed is active, because SetPaused(true) might prevent setProgress from working visually */
+        boolean manualSpeed = Math.abs(this.form.speed.get() - 1.0f) > 0.001f;
         boolean shouldPause = this.form.paused.get() || !filmPlaying;
 
         if (shouldPause != this.lastPaused)
@@ -305,6 +308,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
         this.tickMemory.clear();
         this.currentTick = -1;
         this.lastTick = -1;
+        this.editorProgress = 0f;
         
         activeRenderers.remove(this);
     }
@@ -565,41 +569,53 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
             this.emitter.setRotation(finalRotationEuler.x, finalRotationEuler.y, finalRotationEuler.z);
         }
         
-        /* Force update if paused (e.g. in Form Editor) */
-        if (MinecraftClient.getInstance().isPaused())
+        /* Calculate speed and manual playback condition */
+        float speed = this.form.speed.get();
+        boolean manualSpeed = Math.abs(speed - 1.0f) > 0.001f;
+        boolean isGamePaused = MinecraftClient.getInstance().isPaused();
+        
+        /* If we are NOT paused (game or form), we should update progress */
+        boolean shouldUpdate = !this.form.paused.get() && (!isGamePaused || isPreview);
+
+        if (shouldUpdate)
         {
-            if (isPreview)
+            long now = System.currentTimeMillis();
+
+            if (this.lastFrameTime == 0)
             {
-                long now = System.currentTimeMillis();
-
-                if (this.lastEditorTime == 0)
-                {
-                    this.lastEditorTime = now;
-                }
-
-                long timeDiff = now - this.lastEditorTime;
-                this.lastEditorTime = now;
-
-                float framesToAdd = timeDiff / 1000f * 60f;
-
-                if (framesToAdd > 10f)
-                {
-                    framesToAdd = 1f;
-                }
-
-                if (framesToAdd < 0f)
-                {
-                    framesToAdd = 0f;
-                }
-
-                this.editorProgress += framesToAdd;
-
-                this.emitter.setProgress(this.editorProgress);
+                this.lastFrameTime = now;
             }
+
+            long timeDiff = now - this.lastFrameTime;
+            this.lastFrameTime = now;
+
+            /* If speed is 1.0, we rely on native update, BUT we still track progress to avoid jumps when switching */
+            /* If manual speed, we use this progress to drive the animation */
+            float framesToAdd = (timeDiff / 1000f * 60f) * speed;
+
+            /* Cap large jumps */
+            if (Math.abs(framesToAdd) > 10f)
+            {
+                framesToAdd = Math.signum(framesToAdd) * 1f;
+            }
+            
+            if (framesToAdd < 0f && speed >= 0)
+            {
+                framesToAdd = 0f;
+            }
+
+            this.editorProgress += framesToAdd;
         }
         else
         {
-            this.lastEditorTime = 0;
+            this.lastFrameTime = 0;
+        }
+        
+        /* If manual speed is active OR game is paused (preview), we apply manual progress */
+        /* IMPORTANT: setProgress must be called every frame to override native update if speed != 1.0 */
+        if (manualSpeed || (isGamePaused && isPreview))
+        {
+            this.emitter.setProgress(this.editorProgress);
         }
     }
 
