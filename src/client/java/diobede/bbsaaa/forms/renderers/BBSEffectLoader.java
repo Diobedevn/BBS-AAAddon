@@ -13,7 +13,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -34,6 +36,37 @@ public class BBSEffectLoader
 
     /* Cached reflection field for AAA Particles' loaded effects map */
     private static Field loadedEffectsField = null;
+
+    private static volatile boolean reloadRequested;
+    private static volatile boolean reloading;
+
+    public static void requestReload()
+    {
+        reloadRequested = true;
+    }
+
+    public static boolean beginReload()
+    {
+        if (!reloadRequested)
+        {
+            return false;
+        }
+
+        reloadRequested = false;
+        reloading = true;
+
+        return true;
+    }
+
+    public static void endReload()
+    {
+        reloading = false;
+    }
+
+    public static boolean isReloading()
+    {
+        return reloading;
+    }
 
     /**
      * Get or load an effect definition from BBS external assets.
@@ -293,6 +326,81 @@ public class BBSEffectLoader
         catch (IOException e)
         {
             LOGGER.error("Failed to load asset: {}", assetFile.getAbsolutePath(), e);
+        }
+    }
+
+    public static int preloadExternalEffects()
+    {
+        File assetsFolder = BBSMod.getAssetsFolder();
+        File effeksFolder = new File(assetsFolder, "effeks");
+
+        if (!effeksFolder.exists() || !effeksFolder.isDirectory())
+        {
+            return 0;
+        }
+
+        List<File> files = new ArrayList<>();
+        collectEfks(files, effeksFolder);
+
+        int loaded = 0;
+
+        for (File file : files)
+        {
+            String relative = effeksFolder.toPath().relativize(file.toPath()).toString().replace("\\", "/");
+
+            if (!relative.endsWith(".efkefc"))
+            {
+                continue;
+            }
+
+            relative = relative.substring(0, relative.length() - 7);
+
+            Identifier id;
+
+            try
+            {
+                id = new Identifier("bbs", relative);
+            }
+            catch (Exception e)
+            {
+                continue;
+            }
+
+            if (bbsLoadedEffects.contains(id))
+            {
+                continue;
+            }
+
+            EffectDefinition definition = getOrLoad(id);
+
+            if (definition != null)
+            {
+                loaded += 1;
+            }
+        }
+
+        return loaded;
+    }
+
+    private static void collectEfks(List<File> list, File folder)
+    {
+        File[] files = folder.listFiles();
+
+        if (files == null)
+        {
+            return;
+        }
+
+        for (File file : files)
+        {
+            if (file.isDirectory())
+            {
+                collectEfks(list, file);
+            }
+            else if (file.getName().endsWith(".efkefc"))
+            {
+                list.add(file);
+            }
         }
     }
 

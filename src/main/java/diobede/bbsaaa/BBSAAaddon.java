@@ -15,13 +15,12 @@ public class BBSAAaddon implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		LOGGER.info("BBS AAaddon initialized!");
-		
-		// Register the addon instance for other events
+
 		BBSMod.events.register(new BbsAAAddon());
-        
+		
         // Manual registration fallback to ensure the form is registered in the factory
         try {
-            mchorse.bbs_mod.BBSMod.getForms().register(new Link("bbs-aaaddon", "aaa_particle"), AAAParticleForm.class);
+            mchorse.bbs_mod.BBSMod.getForms().register(Link.bbs("aaa_particle"), AAAParticleForm.class);
             LOGGER.info("Manually registered AAAParticleForm to FormUtils.");
         } catch (Exception e) {
             LOGGER.error("Failed to manually register AAAParticleForm", e);

@@ -14,6 +14,7 @@ import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.joml.Vectors;
+import mchorse.bbs_mod.graphics.texture.Texture;
 import mod.chloeprime.aaaparticles.api.client.effekseer.ParticleEmitter;
 import mod.chloeprime.aaaparticles.client.registry.EffectDefinition;
 import mod.chloeprime.aaaparticles.client.registry.EffectRegistry;
@@ -46,6 +47,37 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
 {
     /* Global registry of active renderers to ensure cleanup */
     public static final List<AAAParticleFormRenderer> activeRenderers = Collections.synchronizedList(new ArrayList<>());
+
+    public static final Link ICON = new Link("bbs-aaaddon", "textures/aaa_texture.png");
+
+    @Override
+    public void renderInUI(UIContext context, int x1, int y1, int x2, int y2)
+    {
+        Texture texture = context.render.getTextures().getTexture(ICON);
+
+        if (texture == null)
+        {
+            return;
+        }
+
+        float min = Math.min(texture.width, texture.height);
+
+        if (min <= 0)
+        {
+            min = 1;
+        }
+
+        int ow = (x2 - x1) - 4;
+        int oh = (y2 - y1) - 4;
+
+        int w = (int) ((texture.width / min) * ow);
+        int h = (int) ((texture.height / min) * ow);
+
+        int x = x1 + (ow - w) / 2 + 2;
+        int y = y1 + (oh - h) / 2 + 2;
+
+        context.batcher.fullTexturedBox(texture, x, y, w, h);
+    }
     
     /* Tick memory system - stores particle state per tick for film seeking */
     private static class ParticleState
@@ -81,6 +113,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
     private boolean loggedDebug = false;
     private float editorProgress = 0f;
     private long lastEditorTime = 0;
+    private long lastFrameTime = 0;
     
     /* Unique identifier for named emitters */
     private final Identifier emitterName;
@@ -153,6 +186,11 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
     private void ensureEmitter()
     {
         if (BBSRendering.isIrisShadowPass())
+        {
+            return;
+        }
+
+        if (BBSEffectLoader.isReloading())
         {
             return;
         }
@@ -236,6 +274,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
         }
 
         /* Update pause state - pause particle when film is paused OR when paused property is true */
+        boolean manualSpeed = Math.abs(this.form.speed.get() - 1.0f) > 0.001f;
         boolean shouldPause = this.form.paused.get() || !filmPlaying;
 
         if (shouldPause != this.lastPaused)
@@ -273,40 +312,9 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
         this.tickMemory.clear();
         this.currentTick = -1;
         this.lastTick = -1;
+        this.editorProgress = 0f;
         
         activeRenderers.remove(this);
-    }
-
-    @Override
-    protected void renderInUI(UIContext context, int x1, int y1, int x2, int y2)
-    {
-        Link preview = this.form.preview.get();
-
-        if (preview != null)
-        {
-            /* Render the preview texture */
-            context.batcher.texturedBox(
-                BBSModClient.getTextures().getTexture(preview),
-                Colors.WHITE,
-                x1, y1, x2 - x1, y2 - y1,
-                0, 0, 1, 1
-            );
-        }
-        else
-        {
-            /* Fallback to particle icon */
-            int cx = (x1 + x2) / 2;
-            int cy = (y1 + y2) / 2;
-            int size = Math.min(x2 - x1, y2 - y1) / 3;
-
-            context.batcher.iconArea(
-                mchorse.bbs_mod.ui.utils.icons.Icons.PARTICLE,
-                cx - size / 2,
-                cy - size / 2,
-                cx + size / 2,
-                cy + size / 2
-            );
-        }
     }
 
     @Override
@@ -565,35 +573,53 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
             this.emitter.setRotation(finalRotationEuler.x, finalRotationEuler.y, finalRotationEuler.z);
         }
         
-        /* Force update if paused (e.g. in Form Editor) */
-        if (MinecraftClient.getInstance().isPaused()) {
-            if (isPreview) {
-                  /* In Form Editor, we need to advance progress manually because game is paused */
-                  long now = System.currentTimeMillis();
-                  
-                  if (this.lastEditorTime == 0) {
-                      this.lastEditorTime = now;
-                  }
-                  
-                  long timeDiff = now - this.lastEditorTime;
-                  this.lastEditorTime = now;
-                  
-                  /* Convert ms to frames (60fps) */
-                  float framesToAdd = timeDiff / 1000f * 60f;
-                  
-                  /* Clamp to avoid huge jumps or negatives */
-                  if (framesToAdd > 10f) framesToAdd = 1f;
-                  if (framesToAdd < 0f) framesToAdd = 0f;
-                  
-                  this.editorProgress += framesToAdd;
-                  
-                  this.emitter.setProgress(this.editorProgress);
-             } else {
-                 this.emitter.setProgress(this.currentTick * 3f + context.transition * 3f);
+        /* Calculate speed and manual playback condition */
+        float speed = this.form.speed.get();
+        boolean manualSpeed = Math.abs(speed - 1.0f) > 0.001f;
+        boolean isGamePaused = MinecraftClient.getInstance().isPaused();
+        
+        /* If we are NOT paused (game or form), we should update progress */
+        boolean shouldUpdate = !this.form.paused.get() && (!isGamePaused || isPreview);
+
+        if (shouldUpdate)
+        {
+            long now = System.currentTimeMillis();
+
+            if (this.lastFrameTime == 0)
+            {
+                this.lastFrameTime = now;
             }
-        } else {
-             /* Reset editor time tracking when not paused */
-             this.lastEditorTime = 0;
+
+            long timeDiff = now - this.lastFrameTime;
+            this.lastFrameTime = now;
+
+            /* If speed is 1.0, we rely on native update, BUT we still track progress to avoid jumps when switching */
+            /* If manual speed, we use this progress to drive the animation */
+            float framesToAdd = (timeDiff / 1000f * 60f) * speed;
+
+            /* Cap large jumps */
+            if (Math.abs(framesToAdd) > 10f)
+            {
+                framesToAdd = Math.signum(framesToAdd) * 1f;
+            }
+            
+            if (framesToAdd < 0f && speed >= 0)
+            {
+                framesToAdd = 0f;
+            }
+
+            this.editorProgress += framesToAdd;
+        }
+        else
+        {
+            this.lastFrameTime = 0;
+        }
+        
+        /* If manual speed is active OR game is paused (preview), we apply manual progress */
+        /* IMPORTANT: setProgress must be called every frame to override native update if speed != 1.0 */
+        if (manualSpeed || (isGamePaused && isPreview))
+        {
+            this.emitter.setProgress(this.editorProgress);
         }
     }
 

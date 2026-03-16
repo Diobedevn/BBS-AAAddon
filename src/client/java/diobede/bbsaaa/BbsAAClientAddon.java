@@ -2,6 +2,7 @@ package diobede.bbsaaa;
 
 import diobede.bbsaaa.forms.AAAParticleForm;
 import diobede.bbsaaa.forms.renderers.AAAParticleFormRenderer;
+import diobede.bbsaaa.forms.renderers.BBSEffectLoader;
 import diobede.bbsaaa.ui.forms.editors.forms.UIAAAParticleForm;
 import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.BBSModClient;
@@ -23,6 +24,8 @@ import java.util.List;
 
 public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitializer
 {
+    private int preloadTicker;
+
     @Override
     public void onInitializeClient()
     {
@@ -32,6 +35,19 @@ public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitial
          * This ensures effects are stopped when the form renderer is no longer active */
         ClientTickEvents.END_CLIENT_TICK.register(client ->
         {
+            if (BBSEffectLoader.beginReload())
+            {
+                List<AAAParticleFormRenderer> renderers = new ArrayList<>(AAAParticleFormRenderer.activeRenderers);
+
+                for (AAAParticleFormRenderer renderer : renderers)
+                {
+                    renderer.cleanup();
+                }
+
+                BBSEffectLoader.clearCache();
+                BBSEffectLoader.endReload();
+            }
+
             if (!AAAParticleFormRenderer.activeRenderers.isEmpty())
             {
                 List<AAAParticleFormRenderer> renderers = new ArrayList<>(AAAParticleFormRenderer.activeRenderers);
@@ -41,16 +57,21 @@ public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitial
                     renderer.checkCleanup();
                 }
             }
+
+            this.preloadTicker += 1;
+
+            if (this.preloadTicker >= 40)
+            {
+                this.preloadTicker = 0;
+                BBSEffectLoader.preloadExternalEffects();
+            }
         });
         
-        /* Manual registration fallback in case event bus fails or timing is off */
         ClientLifecycleEvents.CLIENT_STARTED.register(client ->
         {
             try
             {
-                 /* Manually register renderer */
                  FormUtilsClient.register(AAAParticleForm.class, AAAParticleFormRenderer::new);
-                 /* Manually register panel */
                  UIFormEditor.register(AAAParticleForm.class, UIAAAParticleForm::new);
             }
             catch (Exception e)
@@ -71,6 +92,32 @@ public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitial
                     new Link("bbs-aaaddon", "strings/" + lang + ".json")
                 ));
                 BBSModClient.getL10n().reload();
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
+            try
+            {
+                if (BBSMod.getForms() != null)
+                {
+                    BBSMod.getForms().register(Link.bbs("aaa_particle"), AAAParticleForm.class);
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
+            try
+            {
+                if (BBSModClient.getFormCategories() != null &&
+                    BBSModClient.getFormCategories().getExtraForms() != null &&
+                    BBSModClient.getFormCategories().getExtraForms().getExtraCategory() != null)
+                {
+                    BBSModClient.getFormCategories().getExtraForms().getExtraCategory().addForm(new AAAParticleForm());
+                }
             }
             catch (Exception e)
             {
