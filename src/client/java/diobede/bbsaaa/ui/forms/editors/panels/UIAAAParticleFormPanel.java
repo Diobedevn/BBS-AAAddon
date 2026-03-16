@@ -4,6 +4,7 @@ import diobede.bbsaaa.forms.AAAParticleForm;
 import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.forms.forms.Form;
 import diobede.bbsaaa.forms.renderers.AAAParticleFormRenderer;
+import diobede.bbsaaa.forms.renderers.BBSEffectLoader;
 import mchorse.bbs_mod.l10n.L10n;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.forms.editors.forms.UIForm;
@@ -32,6 +33,7 @@ import java.util.List;
 public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
 {
     public UIButton pickEffect;
+    public UIButton reloadEffects;
     public UIButton pickPreview;
     public UITextbox bone;
     public UIToggle paused;
@@ -50,6 +52,12 @@ public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
         super(editor);
 
         this.pickEffect = new UIButton(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.pick_effect"), (b) -> this.openPicker());
+
+        this.reloadEffects = new UIButton(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.reload_effects"), (b) ->
+        {
+            BBSEffectLoader.requestReload();
+            this.cachedEffects = null;
+        });
 
         this.pickPreview = new UIButton(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.preview"), (b) ->
         {
@@ -81,6 +89,7 @@ public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
         this.worldSpace.tooltip(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.world_space.tooltip"));
 
         this.options.add(UI.label(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.effect")), this.pickEffect);
+        this.options.add(this.reloadEffects);
         this.options.add(this.pickPreview);
         this.options.add(UI.label(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.bone")), this.bone);
         this.options.add(this.paused, this.restart, this.loop);
@@ -93,11 +102,8 @@ public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
 
     private void openPicker()
     {
-        if (this.cachedEffects == null)
-        {
-            this.cachedEffects = new ArrayList<>();
-            this.populateEffects(this.cachedEffects);
-        }
+        this.cachedEffects = new ArrayList<>();
+        this.populateEffects(this.cachedEffects);
 
         UIListOverlayPanel panel = new UIListOverlayPanel(
             L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.select_effect"),

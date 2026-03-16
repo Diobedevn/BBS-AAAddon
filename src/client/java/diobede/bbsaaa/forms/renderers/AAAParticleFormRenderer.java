@@ -190,6 +190,11 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
             return;
         }
 
+        if (BBSEffectLoader.isReloading())
+        {
+            return;
+        }
+
         Identifier effectId = this.getEffectId();
 
         if (effectId == null)
@@ -269,7 +274,6 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
         }
 
         /* Update pause state - pause particle when film is paused OR when paused property is true */
-        /* Note: We do NOT pause when manual speed is active, because SetPaused(true) might prevent setProgress from working visually */
         boolean manualSpeed = Math.abs(this.form.speed.get() - 1.0f) > 0.001f;
         boolean shouldPause = this.form.paused.get() || !filmPlaying;
 

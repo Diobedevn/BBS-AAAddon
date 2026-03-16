@@ -2,6 +2,7 @@ package diobede.bbsaaa;
 
 import diobede.bbsaaa.forms.AAAParticleForm;
 import diobede.bbsaaa.forms.renderers.AAAParticleFormRenderer;
+import diobede.bbsaaa.forms.renderers.BBSEffectLoader;
 import diobede.bbsaaa.ui.forms.editors.forms.UIAAAParticleForm;
 import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.BBSModClient;
@@ -23,6 +24,8 @@ import java.util.List;
 
 public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitializer
 {
+    private int preloadTicker;
+
     @Override
     public void onInitializeClient()
     {
@@ -32,6 +35,19 @@ public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitial
          * This ensures effects are stopped when the form renderer is no longer active */
         ClientTickEvents.END_CLIENT_TICK.register(client ->
         {
+            if (BBSEffectLoader.beginReload())
+            {
+                List<AAAParticleFormRenderer> renderers = new ArrayList<>(AAAParticleFormRenderer.activeRenderers);
+
+                for (AAAParticleFormRenderer renderer : renderers)
+                {
+                    renderer.cleanup();
+                }
+
+                BBSEffectLoader.clearCache();
+                BBSEffectLoader.endReload();
+            }
+
             if (!AAAParticleFormRenderer.activeRenderers.isEmpty())
             {
                 List<AAAParticleFormRenderer> renderers = new ArrayList<>(AAAParticleFormRenderer.activeRenderers);
@@ -40,6 +56,14 @@ public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitial
                 {
                     renderer.checkCleanup();
                 }
+            }
+
+            this.preloadTicker += 1;
+
+            if (this.preloadTicker >= 40)
+            {
+                this.preloadTicker = 0;
+                BBSEffectLoader.preloadExternalEffects();
             }
         });
         
