@@ -24,8 +24,6 @@ import java.util.List;
 
 public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitializer
 {
-    private int preloadTicker;
-
     @Override
     public void onInitializeClient()
     {
@@ -37,15 +35,21 @@ public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitial
         {
             if (BBSEffectLoader.beginReload())
             {
-                List<AAAParticleFormRenderer> renderers = new ArrayList<>(AAAParticleFormRenderer.activeRenderers);
-
-                for (AAAParticleFormRenderer renderer : renderers)
+                try
                 {
-                    renderer.cleanup();
-                }
+                    List<AAAParticleFormRenderer> renderers = new ArrayList<>(AAAParticleFormRenderer.activeRenderers);
 
-                BBSEffectLoader.clearCache();
-                BBSEffectLoader.endReload();
+                    for (AAAParticleFormRenderer renderer : renderers)
+                    {
+                        renderer.cleanup();
+                    }
+
+                    BBSEffectLoader.clearCache();
+                }
+                finally
+                {
+                    BBSEffectLoader.endReload();
+                }
             }
 
             if (!AAAParticleFormRenderer.activeRenderers.isEmpty())
@@ -56,14 +60,6 @@ public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitial
                 {
                     renderer.checkCleanup();
                 }
-            }
-
-            this.preloadTicker += 1;
-
-            if (this.preloadTicker >= 40)
-            {
-                this.preloadTicker = 0;
-                BBSEffectLoader.preloadExternalEffects();
             }
         });
         

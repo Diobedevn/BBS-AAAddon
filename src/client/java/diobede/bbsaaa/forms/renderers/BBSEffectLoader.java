@@ -68,6 +68,11 @@ public class BBSEffectLoader
         return reloading;
     }
 
+    public static boolean canLoadExternalEffects()
+    {
+        return !reloading;
+    }
+
     /**
      * Get or load an effect definition from BBS external assets.
      * Effects are injected into AAA Particles' EffekAssetLoader for automatic rendering.
@@ -75,6 +80,11 @@ public class BBSEffectLoader
     @SuppressWarnings("unchecked")
     public static EffectDefinition getOrLoad(Identifier id)
     {
+        if (!canLoadExternalEffects())
+        {
+            return null;
+        }
+
         /* First check if AAA Particles already has this effect */
         EffekAssetLoader loader = EffekAssetLoader.get();
 
@@ -331,6 +341,11 @@ public class BBSEffectLoader
 
     public static int preloadExternalEffects()
     {
+        if (!canLoadExternalEffects())
+        {
+            return 0;
+        }
+
         File assetsFolder = BBSMod.getAssetsFolder();
         File effeksFolder = new File(assetsFolder, "effeks");
 
@@ -418,7 +433,9 @@ public class BBSEffectLoader
             {
                 Map<Object, EffectDefinition> loadedEffects = (Map<Object, EffectDefinition>) loadedEffectsField.get(loader);
 
-                for (Identifier id : bbsLoadedEffects)
+                List<Identifier> ids = new ArrayList<>(bbsLoadedEffects);
+
+                for (Identifier id : ids)
                 {
                     EffectDefinition definition = loadedEffects.remove(id);
 
@@ -429,7 +446,7 @@ public class BBSEffectLoader
                 }
             }
         }
-        catch (IllegalAccessException e)
+        catch (Throwable e)
         {
             LOGGER.error("Failed to clear BBS effects from AAA Particles", e);
         }
