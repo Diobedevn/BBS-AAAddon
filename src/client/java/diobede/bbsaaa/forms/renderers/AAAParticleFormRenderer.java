@@ -190,7 +190,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
             return;
         }
 
-        if (BBSEffectLoader.isReloading())
+        if (!BBSEffectLoader.canLoadExternalEffects())
         {
             return;
         }
