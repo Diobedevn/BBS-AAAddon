@@ -32,16 +32,6 @@ loom {
 	}
 
 }
-configurations.all {
-    resolutionStrategy {
-        eachDependency { DependencyResolveDetails details ->
-            if (details.requested.group == 'org.lwjgl') {
-                details.useVersion '3.3.1'
-            }
-        }
-    }
-}
-
 
 fabricApi {
 	configureDataGeneration {
@@ -57,9 +47,9 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	modImplementation "maven.modrinth:bbs-cml-edition:1.9.4-1.20.1"
-	modImplementation "maven.modrinth:aaa-particles:1.20.1-1.4.11-fabric"
-	modImplementation "dev.architectury:architectury-fabric:9.2.14"
+	modImplementation "maven.modrinth:bbs-cml-edition:1.10.1-1.21.1"
+	modImplementation "maven.modrinth:aaa-particles:fabric-1.21-1.4.12"
+	modImplementation "dev.architectury:architectury-fabric:13.0.8"
 }
 
 processResources {
@@ -71,7 +61,7 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 17
+	it.options.release = 21
 }
 
 java {
@@ -80,8 +70,8 @@ java {
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_17
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
