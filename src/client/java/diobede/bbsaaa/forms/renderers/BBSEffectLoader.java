@@ -374,7 +374,7 @@ public class BBSEffectLoader
 
             try
             {
-                id = new Identifier("bbs", relative);
+                id = Identifier.of("bbs", relative);
             }
             catch (Exception e)
             {

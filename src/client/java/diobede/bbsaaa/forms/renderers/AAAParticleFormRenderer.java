@@ -122,7 +122,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
     {
         super(form);
 
-        this.emitterName = new Identifier(BBSMod.MOD_ID, "form_" + UUID.randomUUID().toString().replace("-", ""));
+        this.emitterName = Identifier.of(BBSMod.MOD_ID, "form_" + UUID.randomUUID().toString().replace("-", ""));
         
         activeRenderers.add(this);
     }
@@ -177,7 +177,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
             path = path.substring(7);
         }
 
-        return new Identifier(effect.source, path);
+        return Identifier.of(effect.source, path);
     }
 
     /**
@@ -522,16 +522,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
                 /* World Mode - Use World Coordinates */
                 Matrix4f matrix; 
                 
-                try 
-                { 
-                    /* For World Rendering, we also want World Space Matrix for correct rotation */
-                    matrix = new Matrix4f(RenderSystem.getInverseViewRotationMatrix());
-                    matrix.mul(pose);
-                } 
-                catch (Exception e) 
-                { 
-                    matrix = new Matrix4f(pose); 
-                }
+                matrix = new Matrix4f(pose); 
                 
                 matrix.translate(tPos);
                 matrix.rotate(new Quaternionf()

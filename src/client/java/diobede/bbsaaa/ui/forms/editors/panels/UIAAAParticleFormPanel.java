@@ -173,7 +173,16 @@ public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
             return;
         }
 
-        Identifier id = new Identifier(effectId);
+        int separator = effectId.indexOf(':');
+
+        if (separator <= 0 || separator >= effectId.length() - 1)
+        {
+            return;
+        }
+
+        String namespace = effectId.substring(0, separator);
+        String path = effectId.substring(separator + 1);
+        Identifier id = Identifier.of(namespace, path);
 
         /* Create link with effeks/ prefix */
         this.form.effect.set(new Link(id.getNamespace(), "effeks/" + id.getPath() + ".efkefc"));
