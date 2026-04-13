@@ -5,7 +5,8 @@
 	"name": "BBS AAaddon",
 	"description": "BBS Addon for AAAparticle",
 	"authors": [
-		"Diobede the sigma"
+		"Diobede the sigma",
+		"ElGatoPro300"
 	],
 	"contact": {
 		"homepage": "",
@@ -33,7 +34,7 @@
 		"minecraft": "~1.21.1",
 		"java": ">=21",
 		"fabric-api": "*",
-		"bbs": "*",
+		"bbs": "1.10.0",
 		"aaa_particles": "*"
 	}
 }
