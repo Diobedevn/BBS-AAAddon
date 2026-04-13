@@ -3,7 +3,7 @@ plugins {
 	id 'maven-publish'
 }
 
-version = project.mod_version
+version = project.mod_version + "-" + minecraft_version
 group = project.maven_group
 
 base {
@@ -57,7 +57,7 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	modImplementation "maven.modrinth:bbs-cml-edition:1.9.4-1.20.1"
+	modImplementation "maven.modrinth:bbs-cml-edition:1.10.1-1.20.1"
 	modImplementation "maven.modrinth:aaa-particles:1.20.1-1.4.11-fabric"
 	modImplementation "dev.architectury:architectury-fabric:9.2.14"
 }
