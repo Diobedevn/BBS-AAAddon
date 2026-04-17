@@ -2,7 +2,7 @@
 	"schemaVersion": 1,
 	"id": "bbs-aaaddon",
 	"version": "${version}",
-	"name": "BBS AAaddon",
+	"name": "BBS AAAddon",
 	"description": "BBS Addon for AAAparticle",
 	"authors": [
 		"Diobede the sigma",
@@ -34,7 +34,7 @@
 		"minecraft": "~1.21.1",
 		"java": ">=21",
 		"fabric-api": "*",
-		"bbs": "1.10.0",
+		"bbs": ">=1.10.0",
 		"aaa_particles": "*"
 	}
 }
