@@ -16,8 +16,7 @@ import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.joml.Vectors;
 import mchorse.bbs_mod.graphics.texture.Texture;
 import mod.chloeprime.aaaparticles.api.client.effekseer.ParticleEmitter;
-import mod.chloeprime.aaaparticles.client.registry.EffectDefinition;
-import mod.chloeprime.aaaparticles.client.registry.EffectRegistry;
+import mod.chloeprime.aaaparticles.api.client.EffectDefinition;
 import net.minecraft.util.Identifier;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
@@ -213,14 +212,10 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
             this.tickMemory.clear();
         }
 
-        /* Get effect definition - try EffectRegistry first (AAA Particles' standard way) */
-        EffectDefinition definition = EffectRegistry.get(effectId);
-
-        if (definition == null)
-        {
-            /* Try BBS external assets loader - this injects into EffectRegistry */
-            definition = BBSEffectLoader.getOrLoad(effectId);
-        }
+        /* Get effect definition via BBSEffectLoader, which checks EffekAssetLoader first
+         * (handles both resource-pack effects and BBS external assets).
+         * Direct EffectRegistry usage was removed for compatibility with AAA Particles 2.x. */
+        EffectDefinition definition = BBSEffectLoader.getOrLoad(effectId);
 
         if (definition == null)
         {
@@ -430,7 +425,9 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
             { 
             }
             
-            /* Apply form's transform (Translate -> Rotate -> Scale) */
+            /* Transform values — used directly in preview mode only.
+             * In world mode, FormRenderer has already applied the full transform
+             * (including rotate2 and pivot) onto the MatrixStack before render3D(). */
             Transform t = this.form.transform.get();
             Vector3f tPos = t.translate;
             Vector3f tRot = t.rotate;
@@ -444,12 +441,8 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
                  /* Set Emitter Position (Local) */
                  this.emitter.setPosition(tPos.x, tPos.y, tPos.z);
                  
-                 /* Set Emitter Rotation (Local, Radians) */
-                 this.emitter.setRotation(
-                     (float) Math.toRadians(tRot.x), 
-                     (float) Math.toRadians(tRot.y), 
-                     (float) Math.toRadians(tRot.z)
-                 );
+                 /* Set Emitter Rotation (Local) — tRot is already in radians */
+                 this.emitter.setRotation(tRot.x, tRot.y, tRot.z);
                  
                  /* Set Emitter Scale (Local) */
                  float formScale = this.form.particleScale.get();
@@ -519,50 +512,37 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
             }
             else
             {
-                /* World Mode - Use World Coordinates */
-                Matrix4f matrix; 
-                
-                matrix = new Matrix4f(pose); 
-                
-                matrix.translate(tPos);
-                matrix.rotate(new Quaternionf()
-                    .rotateZ((float) Math.toRadians(tRot.z))
-                    .rotateY((float) Math.toRadians(tRot.y))
-                    .rotateX((float) Math.toRadians(tRot.x)));
-                matrix.scale(tScale);
+                /* World Mode - Use World Coordinates.
+                 * FormRenderer.render() already applied the full transform (translate, rotate,
+                 * rotate2, scale, pivot) onto the MatrixStack before calling render3D(), so
+                 * 'pose' already encodes everything. We must NOT re-apply the transform values
+                 * manually — that would double them.
+                 *
+                 * We pass the transform directly as a 3×4 matrix to bypass Euler angle
+                 * decomposition entirely. getEulerAnglesXYZ() clamps the Y axis to [-π/2, π/2],
+                 * which causes wrong results for Y rotations beyond ±90°. */
+                matrix = new Matrix4f(pose);
+                matrix.mul(pose);
 
-                double finalX, finalY, finalZ;
-                
-                /* 1. Position */
+                /* Position: extract translation then add camera world position */
                 Vector3f trans = new Vector3f();
                 matrix.getTranslation(trans);
-                
-                /* Use context camera position instead of Main Camera */
                 org.joml.Vector3d camPos = context.camera.position;
-                finalX = trans.x + camPos.x;
-                finalY = trans.y + camPos.y;
-                finalZ = trans.z + camPos.z;
-                
-                /* 2. Rotation */
-                Vector3f finalRotationEuler = new Vector3f();
-                matrix.getEulerAnglesXYZ(finalRotationEuler);
+                float finalX = (float)(trans.x + camPos.x);
+                float finalY = (float)(trans.y + camPos.y);
+                float finalZ = (float)(trans.z + camPos.z);
 
-                /* 3. Scale */
-                /* Extract scale from matrix to support UI zooming/scaling */
-                Vector3f finalScale = new Vector3f();
-                matrix.getScale(finalScale);
-                
-                /* Apply form scale setting on top of matrix scale */
-                float formScale = this.form.particleScale.get();
-                finalScale.mul(formScale);
-
-                /* Set emitter position (world coordinates) and scale */
-                this.emitter.setPosition((float) finalX, (float) finalY, (float) finalZ);
-                this.emitter.setScale(finalScale.x, finalScale.y, finalScale.z);
-
-                /* Set emitter rotation */
-            this.emitter.setRotation(finalRotationEuler.x, finalRotationEuler.y, finalRotationEuler.z);
-        }
+                /* Build a 3×4 row-major matrix for Effekseer.
+                 * The rotation/scale columns come directly from the JOML matrix (no Euler
+                 * decomposition), scaled by particleScale. Translation is world position. */
+                float ps = this.form.particleScale.get();
+                float[] mat = {
+                    matrix.m00() * ps, matrix.m10() * ps, matrix.m20() * ps, finalX,
+                    matrix.m01() * ps, matrix.m11() * ps, matrix.m21() * ps, finalY,
+                    matrix.m02() * ps, matrix.m12() * ps, matrix.m22() * ps, finalZ
+                };
+                this.emitter.setTransformMatrix(mat);
+            }
         
         /* Calculate speed and manual playback condition */
         float speed = this.form.speed.get();

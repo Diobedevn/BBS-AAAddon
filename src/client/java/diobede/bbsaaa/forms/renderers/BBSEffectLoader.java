@@ -1,10 +1,13 @@
 package diobede.bbsaaa.forms.renderers;
 
 import mchorse.bbs_mod.BBSMod;
+import mod.chloeprime.aaaparticles.api.client.EffectDefinition;
+import mod.chloeprime.aaaparticles.api.client.EffectHolder;
+import mod.chloeprime.aaaparticles.api.client.EffectMetadata;
 import mod.chloeprime.aaaparticles.api.client.effekseer.EffekseerEffect;
 import mod.chloeprime.aaaparticles.api.client.effekseer.TextureType;
 import mod.chloeprime.aaaparticles.client.loader.EffekAssetLoader;
-import mod.chloeprime.aaaparticles.client.registry.EffectDefinition;
+import mod.chloeprime.aaaparticles.client.render.RenderUtil;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +80,6 @@ public class BBSEffectLoader
      * Get or load an effect definition from BBS external assets.
      * Effects are injected into AAA Particles' EffekAssetLoader for automatic rendering.
      */
-    @SuppressWarnings("unchecked")
     public static EffectDefinition getOrLoad(Identifier id)
     {
         if (!canLoadExternalEffects())
@@ -90,12 +92,18 @@ public class BBSEffectLoader
 
         if (loader != null)
         {
-            EffectDefinition existing = loader.get(id);
+            EffectHolder holder = loader.get(id);
 
-            if (existing != null)
+            if (holder != null)
             {
-                // LOGGER.info("Effect {} found in EffekAssetLoader", id);
-                return existing;
+                /* Try lazy get (already loaded) first, otherwise trigger load */
+                EffectDefinition existing = holder.lazyGet()
+                        .orElseGet(() -> holder.load().join().orElse(null));
+
+                if (existing != null)
+                {
+                    return existing;
+                }
             }
         }
         else
@@ -107,7 +115,9 @@ public class BBSEffectLoader
         if (bbsLoadedEffects.contains(id))
         {
             /* Already loaded into AAA Particles, get from there */
-            return loader != null ? loader.get(id) : null;
+            if (loader == null) return null;
+            EffectHolder cached = loader.get(id);
+            return cached != null ? cached.lazyGet().orElse(null) : null;
         }
 
         LOGGER.info("Attempting to load effect from BBS assets: {}", id);
@@ -179,7 +189,6 @@ public class BBSEffectLoader
      * Inject an effect definition into AAA Particles' EffekAssetLoader using reflection.
      * This allows our effects to be rendered by AAA Particles' rendering pipeline.
      */
-    @SuppressWarnings("unchecked")
     private static void injectIntoAAAParticles(Identifier id, EffectDefinition definition)
     {
         try
@@ -199,10 +208,13 @@ public class BBSEffectLoader
                 loadedEffectsField.setAccessible(true);
             }
 
-            Map<Object, EffectDefinition> loadedEffects = (Map<Object, EffectDefinition>) loadedEffectsField.get(loader);
+            @SuppressWarnings("unchecked")
+            Map<Object, EffectHolder> loadedEffects = (Map<Object, EffectHolder>) loadedEffectsField.get(loader);
 
-            /* Convert Identifier to ResourceLocation (they should be compatible) */
-            loadedEffects.put(id, definition);
+            /* Wrap the definition in a holder so the registry pipeline can use it */
+            EffectHolder holder = new EffectHolder(EffectMetadata.DEFAULT, () -> definition);
+            holder.load().join(); /* Mark it as loaded immediately */
+            loadedEffects.put(id, holder);
 
             LOGGER.info("Injected BBS effect into AAA Particles: {}", id);
         }
@@ -231,70 +243,77 @@ public class BBSEffectLoader
 
             File parentDir = effectFile.getParentFile();
 
-            /* Load textures */
-            for (TextureType texType : TextureType.values())
+            /* Wrap all GPU uploads in GL state protection.
+             * Minecraft sets GL_UNPACK_ROW_LENGTH and similar pixel store state when
+             * loading its own textures. Without this wrapper, texture/model uploads
+             * happening mid-frame pick up that dirty state, causing UV corruption. */
+            RenderUtil.runEffekLoadCodeHealthily(() ->
             {
-                int count = effect.textureCount(texType);
-
-                for (int i = 0; i < count; i++)
+                /* Load textures */
+                for (TextureType texType : TextureType.values())
                 {
-                    final int index = i;
-                    String texturePath = effect.getTexturePath(i, texType);
+                    int count = effect.textureCount(texType);
 
-                    if (texturePath != null && !texturePath.isEmpty())
+                    for (int i = 0; i < count; i++)
                     {
-                        loadAsset(parentDir, texturePath, (data, len) ->
-                            effect.loadTexture(data, len, index, texType));
+                        final int index = i;
+                        String texturePath = effect.getTexturePath(i, texType);
+
+                        if (texturePath != null && !texturePath.isEmpty())
+                        {
+                            loadAsset(parentDir, texturePath, (data, len) ->
+                                effect.loadTexture(data, len, index, texType));
+                        }
                     }
                 }
-            }
 
-            /* Load models */
-            int modelCount = effect.modelCount();
+                /* Load models */
+                int modelCount = effect.modelCount();
 
-            for (int i = 0; i < modelCount; i++)
-            {
-                final int index = i;
-                String modelPath = effect.getModelPath(i);
-
-                if (modelPath != null && !modelPath.isEmpty())
+                for (int i = 0; i < modelCount; i++)
                 {
-                    loadAsset(parentDir, modelPath, (data, len) ->
-                        effect.loadModel(data, len, index));
+                    final int index = i;
+                    String modelPath = effect.getModelPath(i);
+
+                    if (modelPath != null && !modelPath.isEmpty())
+                    {
+                        loadAsset(parentDir, modelPath, (data, len) ->
+                            effect.loadModel(data, len, index));
+                    }
                 }
-            }
 
-            /* Load curves */
-            int curveCount = effect.curveCount();
+                /* Load curves */
+                int curveCount = effect.curveCount();
 
-            for (int i = 0; i < curveCount; i++)
-            {
-                final int index = i;
-                String curvePath = effect.getCurvePath(i);
-
-                if (curvePath != null && !curvePath.isEmpty())
+                for (int i = 0; i < curveCount; i++)
                 {
-                    loadAsset(parentDir, curvePath, (data, len) ->
-                        effect.loadCurve(data, len, index));
+                    final int index = i;
+                    String curvePath = effect.getCurvePath(i);
+
+                    if (curvePath != null && !curvePath.isEmpty())
+                    {
+                        loadAsset(parentDir, curvePath, (data, len) ->
+                            effect.loadCurve(data, len, index));
+                    }
                 }
-            }
 
-            /* Load materials */
-            int materialCount = effect.materialCount();
+                /* Load materials */
+                int materialCount = effect.materialCount();
 
-            for (int i = 0; i < materialCount; i++)
-            {
-                final int index = i;
-                String materialPath = effect.getMaterialPath(i);
-
-                if (materialPath != null && !materialPath.isEmpty())
+                for (int i = 0; i < materialCount; i++)
                 {
-                    loadAsset(parentDir, materialPath, (data, len) ->
-                        effect.loadMaterial(data, len, index));
-                }
-            }
+                    final int index = i;
+                    String materialPath = effect.getMaterialPath(i);
 
-            EffectDefinition definition = new EffectDefinition();
+                    if (materialPath != null && !materialPath.isEmpty())
+                    {
+                        loadAsset(parentDir, materialPath, (data, len) ->
+                            effect.loadMaterial(data, len, index));
+                    }
+                }
+            });
+
+            EffectDefinition definition = new EffectDefinition(EffectMetadata.DEFAULT);
 
             definition.setEffect(effect);
 
@@ -422,7 +441,6 @@ public class BBSEffectLoader
     /**
      * Clear all BBS-loaded effects from AAA Particles
      */
-    @SuppressWarnings("unchecked")
     public static void clearCache()
     {
         try
@@ -431,17 +449,18 @@ public class BBSEffectLoader
 
             if (loader != null && loadedEffectsField != null)
             {
-                Map<Object, EffectDefinition> loadedEffects = (Map<Object, EffectDefinition>) loadedEffectsField.get(loader);
+                @SuppressWarnings("unchecked")
+                Map<Object, EffectHolder> loadedEffects = (Map<Object, EffectHolder>) loadedEffectsField.get(loader);
 
                 List<Identifier> ids = new ArrayList<>(bbsLoadedEffects);
 
                 for (Identifier id : ids)
                 {
-                    EffectDefinition definition = loadedEffects.remove(id);
+                    EffectHolder holder = loadedEffects.remove(id);
 
-                    if (definition != null)
+                    if (holder != null)
                     {
-                        definition.close();
+                        holder.close();
                     }
                 }
             }
