@@ -4,21 +4,23 @@ import diobede.bbsaaa.forms.AAAParticleForm;
 import diobede.bbsaaa.forms.renderers.AAAParticleFormRenderer;
 import diobede.bbsaaa.forms.renderers.BBSEffectLoader;
 import diobede.bbsaaa.ui.forms.editors.forms.UIAAAParticleForm;
+
 import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.addons.BBSClientAddon;
 import mchorse.bbs_mod.events.register.RegisterFormsRenderersEvent;
 import mchorse.bbs_mod.events.register.RegisterL10nEvent;
+import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.l10n.L10n;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.resources.packs.InternalAssetsSourcePack;
+import mchorse.bbs_mod.ui.film.replays.UIReplaysEditor;
+import mchorse.bbs_mod.ui.forms.editors.UIFormEditor;
+import mchorse.bbs_mod.ui.utils.icons.Icons;
+
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import mchorse.bbs_mod.forms.FormUtilsClient;
-import mchorse.bbs_mod.ui.forms.editors.UIFormEditor;
-import mchorse.bbs_mod.ui.film.replays.UIReplaysEditor;
-import mchorse.bbs_mod.ui.utils.icons.Icons;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -130,7 +132,7 @@ public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitial
                 BBSMod.getProvider().register(new InternalAssetsSourcePack("bbs-aaaddon_icons", "assets", BbsAAClientAddon.class));
 
                 /* Register L10n links directly and reload after packs are in place */
-                BBSModClient.getL10n().register((lang) -> java.util.List.of(
+                BBSModClient.getL10n().register((lang) -> List.of(
                     new Link("bbs-aaaddon", "strings/" + L10n.DEFAULT_LANGUAGE + ".json"),
                     new Link("bbs-aaaddon", "strings/" + lang + ".json")
                 ));
@@ -172,7 +174,7 @@ public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitial
     @Override
     protected void registerL10n(RegisterL10nEvent event)
     {
-        event.l10n.register((lang) -> java.util.List.of(
+        event.l10n.register((lang) -> List.of(
             new Link("bbs-aaaddon", "strings/en_us.json"),
             new Link("bbs-aaaddon", "strings/" + lang + ".json")
         ));

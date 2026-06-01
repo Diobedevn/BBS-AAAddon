@@ -1,39 +1,46 @@
 package diobede.bbsaaa.forms.renderers;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import diobede.bbsaaa.forms.AAAParticleForm;
+
 import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.BBSModClient;
 import mchorse.bbs_mod.client.BBSRendering;
 import mchorse.bbs_mod.forms.ITickable;
 import mchorse.bbs_mod.forms.entities.IEntity;
 import mchorse.bbs_mod.forms.renderers.FormRenderType;
-import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
-import diobede.bbsaaa.forms.AAAParticleForm;
 import mchorse.bbs_mod.forms.renderers.FormRenderer;
+import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
+import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mchorse.bbs_mod.utils.colors.Colors;
 import mchorse.bbs_mod.utils.joml.Vectors;
-import mchorse.bbs_mod.graphics.texture.Texture;
-import mod.chloeprime.aaaparticles.api.client.effekseer.ParticleEmitter;
-import mod.chloeprime.aaaparticles.api.client.EffectDefinition;
-import net.minecraft.util.Identifier;
+import mchorse.bbs_mod.utils.pose.Transform;
+
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.Identifier;
+
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
-import mchorse.bbs_mod.utils.pose.Transform;
 import org.joml.Vector3d;
 import org.joml.Vector3f;
-import mod.chloeprime.aaaparticles.client.render.EffekRenderer;
-import net.minecraft.client.util.math.MatrixStack;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import mod.chloeprime.aaaparticles.api.client.EffectDefinition;
+import mod.chloeprime.aaaparticles.api.client.effekseer.ParticleEmitter;
+import mod.chloeprime.aaaparticles.client.render.EffekRenderer;
 
 /**
  * AAA Particle Form Renderer
@@ -405,7 +412,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
             { 
                 try 
                 { 
-                    java.lang.reflect.Field typeField = context.getClass().getField("type"); 
+                    Field typeField = context.getClass().getField("type"); 
                     Object typeObj = typeField.get(context); 
 
                     if (typeObj != null) 
@@ -460,7 +467,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
                      
                      try {
                           /* Set Position */
-                          java.lang.reflect.Method setPos = net.minecraft.client.render.Camera.class.getDeclaredMethod("setPos", double.class, double.class, double.class);
+                          Method setPos = net.minecraft.client.render.Camera.class.getDeclaredMethod("setPos", double.class, double.class, double.class);
                           setPos.setAccessible(true);
                           setPos.invoke(camera, bbsCam.position.x, bbsCam.position.y, bbsCam.position.z);
                           
@@ -468,7 +475,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
                           float pitch = (float) Math.toDegrees(bbsCam.rotation.x);
                           float yaw = (float) Math.toDegrees(bbsCam.rotation.y) - 180.0f;
                           
-                          java.lang.reflect.Method setRot = net.minecraft.client.render.Camera.class.getDeclaredMethod("setRotation", float.class, float.class);
+                          Method setRot = net.minecraft.client.render.Camera.class.getDeclaredMethod("setRotation", float.class, float.class);
                           setRot.setAccessible(true);
                           setRot.invoke(camera, yaw, pitch);
                      } catch (Exception e) {
@@ -477,9 +484,9 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
                      
                      /* Use reflection to find and invoke onRenderHand */
                      /* Method signature: onRenderHand(float, InteractionHand, PoseStack, Matrix4f, Camera) */
-                     java.lang.reflect.Method renderMethod = null;
+                     Method renderMethod = null;
                      
-                     for (java.lang.reflect.Method m : EffekRenderer.class.getMethods()) {
+                     for (Method m : EffekRenderer.class.getMethods()) {
                          if (m.getName().equals("onRenderHand") && m.getParameterCount() == 5) {
                              renderMethod = m;
                              break;
@@ -527,7 +534,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
                 /* Position: extract translation then add camera world position */
                 Vector3f trans = new Vector3f();
                 matrix.getTranslation(trans);
-                org.joml.Vector3d camPos = context.camera.position;
+                Vector3d camPos = context.camera.position;
                 float finalX = (float)(trans.x + camPos.x);
                 float finalY = (float)(trans.y + camPos.y);
                 float finalZ = (float)(trans.z + camPos.z);

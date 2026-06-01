@@ -1,16 +1,8 @@
 package diobede.bbsaaa.forms.renderers;
 
 import mchorse.bbs_mod.BBSMod;
-import mod.chloeprime.aaaparticles.api.client.EffectDefinition;
-import mod.chloeprime.aaaparticles.api.client.EffectHolder;
-import mod.chloeprime.aaaparticles.api.client.EffectMetadata;
-import mod.chloeprime.aaaparticles.api.client.effekseer.EffekseerEffect;
-import mod.chloeprime.aaaparticles.api.client.effekseer.TextureType;
-import mod.chloeprime.aaaparticles.client.loader.EffekAssetLoader;
-import mod.chloeprime.aaaparticles.client.render.RenderUtil;
+
 import net.minecraft.util.Identifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,6 +13,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import mod.chloeprime.aaaparticles.api.client.EffectDefinition;
+import mod.chloeprime.aaaparticles.api.client.EffectHolder;
+import mod.chloeprime.aaaparticles.api.client.EffectMetadata;
+import mod.chloeprime.aaaparticles.api.client.effekseer.EffekseerEffect;
+import mod.chloeprime.aaaparticles.api.client.effekseer.TextureType;
+import mod.chloeprime.aaaparticles.client.loader.EffekAssetLoader;
+import mod.chloeprime.aaaparticles.client.render.RenderUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * BBS Effect Loader
