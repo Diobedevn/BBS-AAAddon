@@ -61,7 +61,7 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	modImplementation "maven.modrinth:bbs-cml-edition:1.10.1-1.20.1"
+	modImplementation "maven.modrinth:bbs-cml-edition:1.10.3-1.20.1"
 	modImplementation "maven.modrinth:aaa-particles:fabric-1.20.1-2.2.0"
 	modImplementation "dev.architectury:architectury-fabric:9.2.14"
 	modImplementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:8.0.0"
