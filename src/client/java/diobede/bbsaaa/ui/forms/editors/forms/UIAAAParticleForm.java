@@ -2,6 +2,7 @@ package diobede.bbsaaa.ui.forms.editors.forms;
 
 import diobede.bbsaaa.forms.AAAParticleForm;
 import diobede.bbsaaa.ui.forms.editors.panels.UIAAAParticleFormPanel;
+
 import mchorse.bbs_mod.l10n.L10n;
 import mchorse.bbs_mod.ui.forms.editors.forms.UIForm;
 import mchorse.bbs_mod.ui.utils.icons.Icons;

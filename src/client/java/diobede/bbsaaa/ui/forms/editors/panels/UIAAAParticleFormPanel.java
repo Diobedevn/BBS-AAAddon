@@ -1,10 +1,11 @@
 package diobede.bbsaaa.ui.forms.editors.panels;
 
 import diobede.bbsaaa.forms.AAAParticleForm;
-import mchorse.bbs_mod.BBSMod;
-import mchorse.bbs_mod.forms.forms.Form;
 import diobede.bbsaaa.forms.renderers.AAAParticleFormRenderer;
 import diobede.bbsaaa.forms.renderers.BBSEffectLoader;
+
+import mchorse.bbs_mod.BBSMod;
+import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.l10n.L10n;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.forms.editors.forms.UIForm;
@@ -17,6 +18,7 @@ import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIListOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.utils.UI;
+
 import net.minecraft.util.Identifier;
 
 import java.io.File;
