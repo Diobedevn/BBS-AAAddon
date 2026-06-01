@@ -17,6 +17,8 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.ui.forms.editors.UIFormEditor;
+import mchorse.bbs_mod.ui.film.replays.UIReplaysEditor;
+import mchorse.bbs_mod.ui.utils.icons.Icons;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -69,6 +71,51 @@ public class BbsAAClientAddon extends BBSClientAddon implements ClientModInitial
             {
                  FormUtilsClient.register(AAAParticleForm.class, AAAParticleFormRenderer::new);
                  UIFormEditor.register(AAAParticleForm.class, UIAAAParticleForm::new);
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+
+            try
+            {
+                /* Register track colors using a smooth gradient from #d00093 to #00ef77 */
+                int startColor = 0xd00093;
+                int endColor = 0x00ef77;
+
+                int r1 = (startColor >> 16) & 0xFF;
+                int g1 = (startColor >> 8) & 0xFF;
+                int b1 = startColor & 0xFF;
+
+                int r2 = (endColor >> 16) & 0xFF;
+                int g2 = (endColor >> 8) & 0xFF;
+                int b2 = endColor & 0xFF;
+
+                String[] properties = {
+                    "bone", "paused", "restart", "loop", 
+                    "duration", "speed", "particleScale", "sortingLayer", "worldSpace"
+                };
+
+                for (int i = 0; i < properties.length; i++)
+                {
+                    float ratio = (float) i / (properties.length - 1);
+                    int r = (int) (r1 + ratio * (r2 - r1));
+                    int g = (int) (g1 + ratio * (g2 - g1));
+                    int b = (int) (b1 + ratio * (b2 - b1));
+                    int color = (r << 16) | (g << 8) | b;
+                    
+                    UIReplaysEditor.registerColor(properties[i], color);
+                }
+
+                /* Register track icons */
+                UIReplaysEditor.registerIcon("bone", Icons.LIST);
+                UIReplaysEditor.registerIcon("restart", Icons.REDO);
+                UIReplaysEditor.registerIcon("loop", Icons.REFRESH);
+                UIReplaysEditor.registerIcon("duration", Icons.TIME);
+                UIReplaysEditor.registerIcon("speed", Icons.FORWARD);
+                UIReplaysEditor.registerIcon("particleScale", Icons.MAXIMIZE);
+                UIReplaysEditor.registerIcon("sortingLayer", Icons.PARTICLE);
+                UIReplaysEditor.registerIcon("worldSpace", Icons.GLOBE);
             }
             catch (Exception e)
             {
