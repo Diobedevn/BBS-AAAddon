@@ -521,8 +521,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
                  * We pass the transform directly as a 3×4 matrix to bypass Euler angle
                  * decomposition entirely. getEulerAnglesXYZ() clamps the Y axis to [-π/2, π/2],
                  * which causes wrong results for Y rotations beyond ±90°. */
-                matrix = new Matrix4f(pose);
-                matrix.mul(pose);
+                Matrix4f matrix = new Matrix4f(pose);
 
                 /* Position: extract translation then add camera world position */
                 Vector3f trans = new Vector3f();
