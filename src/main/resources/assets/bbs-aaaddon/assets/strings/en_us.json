@@ -18,5 +18,10 @@
     "bbsaaa.ui.forms.editors.aaa_particle.preview": "Preview",
     "bbsaaa.ui.forms.editors.aaa_particle.pick_effect": "Pick Effect",
     "bbsaaa.ui.forms.editors.aaa_particle.reload_effects": "Reload Effects",
-    "bbsaaa.ui.forms.editors.aaa_particle.select_effect": "Select AAA Effect"
+    "bbsaaa.ui.forms.editors.aaa_particle.select_effect": "Select AAA Effect",
+    "bbsaaa.track.restart": "Restart",
+    "bbsaaa.track.speed": "Speed",
+    "bbsaaa.track.particleScale": "Particle Scale",
+    "bbsaaa.track.sortingLayer": "Sorting Layer",
+    "bbsaaa.track.worldSpace": "World Space"
 }
