@@ -19,18 +19,15 @@
 		"main": [
 			"diobede.bbsaaa.BBSAAaddon"
 		],
-		"client": [
-			"diobede.bbsaaa.BbsAAClientAddon"
-		],
 		"bbs-addon": [
 			"diobede.bbsaaa.addon.BbsAAAddon"
 		],
-		"bbs-addon-client": [
+		"bbs-client-addon": [
 			"diobede.bbsaaa.BbsAAClientAddon"
 		]
 	},
 	"depends": {
-		"fabricloader": ">=0.18.4",
+		"fabricloader": ">=0.19.5",
 		"minecraft": "~1.21.1",
 		"java": ">=21",
 		"fabric-api": "*",
