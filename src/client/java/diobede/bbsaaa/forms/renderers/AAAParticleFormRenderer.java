@@ -50,6 +50,21 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
         return this.playback.getEmitter();
     }
 
+    /** Do not call exists(): AAA's before-hand and tail checks must agree even
+     * when an emitter finishes during the draw between those two checks. */
+    public static boolean hasWorldEmitters()
+    {
+        for (AAAParticleFormRenderer renderer : ACTIVE)
+        {
+            ParticleEmitter emitter = renderer.getEmitter();
+            if (emitter != null && emitter.type == ParticleEmitter.Type.WORLD)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void checkActiveRenderers()
     {
         for (AAAParticleFormRenderer renderer : List.copyOf(ACTIVE))

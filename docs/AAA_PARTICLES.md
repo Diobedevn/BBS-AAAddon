@@ -54,6 +54,26 @@ do not update particle playback.
 
 ## Current limits and remaining work
 
+### First-person hand depth
+
+When addon world emitters are active, `AAARenderContextMixin` moves AAA's
+Sodium/no-shader world draw to its existing before-hand hook. Its late draw
+restores the captured world depth, which lacks the first-person hand; drawing
+before the hand allows Minecraft to composite the hand over world particles.
+The decision checks owned emitter type rather than native liveness, so it remains
+stable between AAA's before-hand and end-of-frame checks even if an effect ends.
+
+AAA batches world effects together, so this ordering also applies to other AAA
+world effects while an addon world emitter is active. Shader-enabled rendering,
+the form editor preview, and scenes without addon world emitters retain AAA's
+existing ordering. Effects with depth testing disabled can still draw over world
+geometry; this workaround addresses hand composition only.
+
+The fix needs visual verification with the same first-person scene, both an empty
+hand and a held item, third person, and Iris shaders on/off.
+
+### Playback and properties
+
 Seeking backward or skipping ticks restarts the effect. It does **not** restore a
 historical particle simulation. The former tick cache did not contain simulation
 state and has been removed. Playback still uses elapsed time, so deterministic
