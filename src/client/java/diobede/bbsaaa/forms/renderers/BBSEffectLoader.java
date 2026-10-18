@@ -1,17 +1,16 @@
 package diobede.bbsaaa.forms.renderers;
 
 import mchorse.bbs_mod.BBSMod;
+import diobede.bbsaaa.particles.AAAEffectRegistry;
 
 import net.minecraft.util.Identifier;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import mod.chloeprime.aaaparticles.api.client.EffectDefinition;
@@ -38,9 +37,7 @@ public class BBSEffectLoader
 
     /* Track which effects we've loaded so we can clean them up */
     private static final Set<Identifier> bbsLoadedEffects = new HashSet<>();
-
-    /* Cached reflection field for AAA Particles' loaded effects map */
-    private static Field loadedEffectsField = null;
+    private static final Set<Identifier> failedEffects = new HashSet<>();
 
     private static volatile boolean reloadRequested;
     private static volatile boolean reloading;
@@ -110,16 +107,17 @@ public class BBSEffectLoader
         }
         else
         {
-            LOGGER.warn("EffekAssetLoader.get() returned null!");
+            // Native resources must not be created until AAA's registry is ready.
+            return null;
         }
 
-        /* Check if we already tried to load this */
-        if (bbsLoadedEffects.contains(id))
+        // AAA may have unloaded our holder during a resource reload. A stale ID
+        // must not prevent the effect from being loaded again.
+        bbsLoadedEffects.remove(id);
+
+        if (!AAAEffectRegistry.isAvailable() || failedEffects.contains(id))
         {
-            /* Already loaded into AAA Particles, get from there */
-            if (loader == null) return null;
-            EffectHolder cached = loader.get(id);
-            return cached != null ? cached.lazyGet().orElse(null) : null;
+            return null;
         }
 
         LOGGER.info("Attempting to load effect from BBS assets: {}", id);
@@ -171,6 +169,7 @@ public class BBSEffectLoader
         if (!effectFile.exists())
         {
             LOGGER.debug("Effect file not found: {}", effectFile.getAbsolutePath());
+            failedEffects.add(id);
 
             return null;
         }
@@ -179,51 +178,23 @@ public class BBSEffectLoader
 
         if (definition != null)
         {
-            /* Inject into AAA Particles */
-            injectIntoAAAParticles(id, definition);
-            bbsLoadedEffects.add(id);
+            if (AAAEffectRegistry.register(id, definition))
+            {
+                bbsLoadedEffects.add(id);
+            }
+            else
+            {
+                definition.close();
+                failedEffects.add(id);
+                return null;
+            }
+        }
+        else
+        {
+            failedEffects.add(id);
         }
 
         return definition;
-    }
-
-    /**
-     * Inject an effect definition into AAA Particles' EffekAssetLoader using reflection.
-     * This allows our effects to be rendered by AAA Particles' rendering pipeline.
-     */
-    private static void injectIntoAAAParticles(Identifier id, EffectDefinition definition)
-    {
-        try
-        {
-            EffekAssetLoader loader = EffekAssetLoader.get();
-
-            if (loader == null)
-            {
-                LOGGER.warn("EffekAssetLoader not initialized, cannot inject effect {}", id);
-
-                return;
-            }
-
-            if (loadedEffectsField == null)
-            {
-                loadedEffectsField = EffekAssetLoader.class.getDeclaredField("loadedEffects");
-                loadedEffectsField.setAccessible(true);
-            }
-
-            @SuppressWarnings("unchecked")
-            Map<Object, EffectHolder> loadedEffects = (Map<Object, EffectHolder>) loadedEffectsField.get(loader);
-
-            /* Wrap the definition in a holder so the registry pipeline can use it */
-            EffectHolder holder = new EffectHolder(EffectMetadata.DEFAULT, () -> definition);
-            holder.load().join(); /* Mark it as loaded immediately */
-            loadedEffects.put(id, holder);
-
-            LOGGER.info("Injected BBS effect into AAA Particles: {}", id);
-        }
-        catch (NoSuchFieldException | IllegalAccessException e)
-        {
-            LOGGER.error("Failed to inject effect into AAA Particles: {}", id, e);
-        }
     }
 
     /**
@@ -231,9 +202,10 @@ public class BBSEffectLoader
      */
     private static EffectDefinition loadEffect(File effectFile, Identifier id)
     {
+        EffekseerEffect effect = new EffekseerEffect();
+        boolean retained = false;
         try (FileInputStream input = new FileInputStream(effectFile))
         {
-            EffekseerEffect effect = new EffekseerEffect();
             boolean success = effect.load(input, 1);
 
             if (!success)
@@ -318,16 +290,24 @@ public class BBSEffectLoader
             EffectDefinition definition = new EffectDefinition(EffectMetadata.DEFAULT);
 
             definition.setEffect(effect);
+            retained = true;
 
             LOGGER.info("Loaded BBS effect: {} from {}", id, effectFile.getAbsolutePath());
 
             return definition;
         }
-        catch (IOException e)
+        catch (IOException | RuntimeException e)
         {
             LOGGER.error("Failed to load effect file: {}", effectFile.getAbsolutePath(), e);
 
             return null;
+        }
+        finally
+        {
+            if (!retained)
+            {
+                effect.close();
+            }
         }
     }
 
@@ -445,34 +425,9 @@ public class BBSEffectLoader
      */
     public static void clearCache()
     {
-        try
-        {
-            EffekAssetLoader loader = EffekAssetLoader.get();
-
-            if (loader != null && loadedEffectsField != null)
-            {
-                @SuppressWarnings("unchecked")
-                Map<Object, EffectHolder> loadedEffects = (Map<Object, EffectHolder>) loadedEffectsField.get(loader);
-
-                List<Identifier> ids = new ArrayList<>(bbsLoadedEffects);
-
-                for (Identifier id : ids)
-                {
-                    EffectHolder holder = loadedEffects.remove(id);
-
-                    if (holder != null)
-                    {
-                        holder.close();
-                    }
-                }
-            }
-        }
-        catch (Throwable e)
-        {
-            LOGGER.error("Failed to clear BBS effects from AAA Particles", e);
-        }
-
+        AAAEffectRegistry.clear();
         bbsLoadedEffects.clear();
+        failedEffects.clear();
     }
 
     /**

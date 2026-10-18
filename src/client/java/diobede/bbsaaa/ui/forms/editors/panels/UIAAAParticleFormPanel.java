@@ -1,13 +1,12 @@
 package diobede.bbsaaa.ui.forms.editors.panels;
 
 import diobede.bbsaaa.forms.AAAParticleForm;
-import diobede.bbsaaa.forms.renderers.AAAParticleFormRenderer;
 import diobede.bbsaaa.forms.renderers.BBSEffectLoader;
+import diobede.bbsaaa.particles.ParticleEffectIds;
+import diobede.bbsaaa.BBSAAaddon;
 
 import mchorse.bbs_mod.BBSMod;
-import mchorse.bbs_mod.forms.forms.Form;
 import mchorse.bbs_mod.l10n.L10n;
-import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.forms.editors.forms.UIForm;
 import mchorse.bbs_mod.ui.forms.editors.panels.UIFormPanel;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
@@ -136,7 +135,7 @@ public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            BBSAAaddon.LOGGER.error("Failed to list external particle effects", e);
         }
 
         Collections.sort(list);
@@ -162,7 +161,10 @@ public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
             else if (file.getName().endsWith(".efkefc"))
             {
                 String key = namespace + ":" + path.substring(0, path.length() - 7);
-                list.add(key);
+                if (Identifier.tryParse(key) != null)
+                {
+                    list.add(key);
+                }
             }
         }
     }
@@ -175,39 +177,17 @@ public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
             return;
         }
 
-        Identifier id = new Identifier(effectId);
-
-        /* Create link with effeks/ prefix */
-        this.form.effect.set(new Link(id.getNamespace(), "effeks/" + id.getPath() + ".efkefc"));
+        Identifier id = Identifier.tryParse(effectId);
+        if (id != null)
+        {
+            this.form.effect.set(ParticleEffectIds.toLink(id));
+        }
     }
 
     private String getCurrentEffectId()
     {
-        Link effect = this.form.effect.get();
-
-        if (effect == null)
-        {
-            return null;
-        }
-
-        String path = effect.path;
-
-        if (path == null)
-        {
-            return null;
-        }
-
-        if (path.startsWith("effeks/"))
-        {
-            path = path.substring(7);
-        }
-
-        if (path.endsWith(".efkefc"))
-        {
-            path = path.substring(0, path.length() - 7);
-        }
-
-        return effect.source + ":" + path;
+        Identifier id = ParticleEffectIds.fromLink(this.form.effect.get());
+        return id == null ? null : id.toString();
     }
 
     @Override

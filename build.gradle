@@ -61,7 +61,10 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	// BBS CML 3.0 jar
+	// Release jars use intermediary mappings; Loom remaps them for development.
+	if (!file(project.bbs_dev_jar).isFile()) {
+		throw new GradleException("Missing BBS CML jar: ${project.bbs_dev_jar}. Place the release jar in libs/ or set -Pbbs_dev_jar=<path>.")
+	}
 	modImplementation files(project.bbs_dev_jar)
 
 	// Optional shader integrations that BBS mixins target; required for the dev runtime.
@@ -73,6 +76,13 @@ dependencies {
 	modImplementation "maven.modrinth:aaa-particles:fabric-1.20.1-2.2.3"
 	modImplementation "dev.architectury:architectury-fabric:9.2.14"
 	modImplementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:8.0.0"
+
+	testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
+	testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.11.4"
+}
+
+test {
+	useJUnitPlatform()
 }
 
 processResources {
@@ -88,10 +98,6 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
-	withSourcesJar()
 
 	sourceCompatibility = JavaVersion.VERSION_17
 	targetCompatibility = JavaVersion.VERSION_17

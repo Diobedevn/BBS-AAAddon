@@ -1,54 +1,83 @@
-# AAA Particles Integration for BBS Mod
+# AAA Particles integration for CML 3.0
 
-This addon integrates AAAParticles (Effekseer) into the BBS Mod form system.
+The addon registers the existing `bbs:aaa_particle` form using CML addon API 2.
+Saved property names and effect links remain unchanged.
 
-## Features
+## Build
 
-- **Custom Form**: `aaa_particle` form type.
-- **Automatic Discovery**: Loads `.efkefc` files from the `effekseer/` folder in your game directory.
-- **Full UI Integration**: Dedicated panel in the BBS Dashboard to select effects and configure parameters.
-- **Dynamic Control**: Support for pausing, scaling, and 4 dynamic inputs.
+- Minecraft 1.20.1, Fabric, AAA Particles 2.2.3 and CML 3.0 beta 2.
+- Run the current Gradle wrapper with JDK 25. The addon bytecode targets Java 17.
+- Place `bbs-cml-3.0-beta-2-1.20.1.jar` in `libs/`, then run `./gradlew build`
+  (`.\gradlew.bat build` on Windows).
+- To use a different intermediary release jar, pass `-Pbbs_dev_jar=<path>`.
+  Loom remaps the release jar for the development environment; a named development
+  jar is not interchangeable with an intermediary release jar.
+- The local CML jar is ignored by Git. A fresh checkout or CI runner must provision
+  it before building. The build reports its missing path explicitly.
+- `./gradlew test` runs the playback state regression tests without Minecraft or
+  the native Effekseer runtime.
 
-## Usage
+## Effects
 
-### 1. Installation
+Place effects under `effeks/` inside the assets directory configured by BBS/CML.
+For example, `<BBS assets>/effeks/magic/circle.efkefc` appears as
+`bbs:magic/circle`. Keep each effect's textures, models, curves and materials at
+the relative paths referenced by its Effekseer project.
 
-1.  Ensure `aaa_particles` mod is installed.
-2.  Install this addon.
+The picker lists this external directory recursively. Playback also checks AAA
+Particles' registry first, allowing already-registered resource pack effects to
+be used by saved forms. The older `effekseer/` path inside the BBS assets directory
+is retained as a loading fallback; the picker lists `effeks/` only.
 
-### 2. Adding Effects
+Use **Reload Effects** after adding or repairing files. Reload stops active
+emitters, releases addon-owned effect holders, and clears both successful and
+failed load bookkeeping. Failed files are not retried every render frame.
 
-1.  Navigate to your game directory (e.g., `.minecraft` or instance folder).
-2.  Create a folder named `effekseer`.
-3.  Inside `effekseer`, create a folder named `effeks` (required by AAAParticles loader).
-4.  Place your `.efkefc` files inside `effekseer/effeks/`.
-    *   Example: `effekseer/effeks/magic_circle.efkefc`
+## Responsibilities
 
-### 3. Using in BBS
+- `AAAParticleForm`: serialized properties; no native or client dependencies.
+- `AAAParticleFormRenderer`: form transforms, icon drawing and renderer lifetime.
+- `ParticlePlayback`: emitter creation, pause, restart, looping and playback clock.
+- `PlaybackState`: pure Java clock and restart bookkeeping, covered by unit tests.
+- `FilmPlaybackTracker`: reads actual controller pause state through CML lifecycle
+  events rather than treating a slow tick as a paused film.
+- `AAAPreviewRenderer`: typed Fabric preview calls and a camera subclass. Minecraft
+  method names are remapped by Loom; no reflective camera lookup is required.
+- `BBSEffectLoader`: external effect and dependency loading.
+- `AAAEffectRegistry`: isolated access to AAA's private effect registry. Cleanup
+  removes only holders owned by this addon, preserving replacements from reloads.
+- `ParticleEffectIds`: shared conversion between saved links and AAA identifiers.
 
-1.  Open the BBS Dashboard (`B` by default).
-2.  Go to **Actors** (or any form-based editor).
-3.  Add a new Form.
-4.  Select **aaa_particle** from the list.
-5.  In the **AAA Particles** tab:
-    *   **Effect**: Select your effect from the list (e.g., `effekseer:magic_circle`).
-    *   **Options**: Toggle pause or adjust scale.
-    *   **Inputs**: Adjust dynamic inputs (0-3) which map to Effekseer dynamic parameters.
+Film shutdown, disconnect and addon shutdown clean up emitters. A fallback stops
+renderers after 20 client ticks without a normal render. Shadow and picking passes
+do not update particle playback.
 
-## Technical Details
+## Current limits and remaining work
 
-- **Form ID**: `bbs-aaaddon:aaa_particle`
-- **Renderer**: `AAAParticleFormRenderer` uses `EffectRegistry` to spawn and manage `ParticleEmitter`.
-- **Resource Loading**: `AAAParticlesSourcePack` registers the `effekseer/` folder as a resource pack with namespace `effekseer`.
-- **Entity Binding**: Emitters are bound to the form's entity, updating position automatically every tick.
+Seeking backward or skipping ticks restarts the effect. It does **not** restore a
+historical particle simulation. The former tick cache did not contain simulation
+state and has been removed. Playback still uses elapsed time, so deterministic
+film export and exact seeking require a separate timeline-driven implementation.
 
-## Troubleshooting
+`bone`, `duration`, `sortingLayer` and `worldSpace` remain serialized and visible
+for compatibility, but their behavior has not been implemented in this phase.
+Dynamic Effekseer inputs are not currently exposed by this form.
 
-- **Effect not showing in list**:
-    - Ensure the file is in `effekseer/effeks/`.
-    - Restart the game (resources are scanned on startup).
-    - Check logs for "effekseer" resource pack errors.
-- **Particle not rendering**:
-    - Ensure the effect file is valid.
-    - Check if `scale` is too small.
-    - Check if `paused` is enabled.
+AAA's private registry integration remains version-sensitive, although it is now
+isolated and reports failures. The preview uses AAA's experimental main-hand
+rendering path, shared by effects of that type. Multiple simultaneous previews
+still require in-game validation.
+
+## In-game verification
+
+After building, check one short effect and one continuous effect in CML:
+
+1. Select and preview an effect; change its scale and rotations beyond 90 degrees.
+2. Test pause, speeds 0.5/1/2, restart held across several ticks, and natural looping.
+3. Pause/resume a film and seek forward/backward; seeking should restart the effect.
+4. Test a model block and an actor, then remove them and close the film.
+5. Reload effects, repair a missing effect and reload again, then leave/rejoin a world.
+6. Repeat preview and world rendering with Iris enabled, checking shadow passes.
+
+Compilation and pure Java tests do not validate native rendering, GL state or
+shader compatibility; those checks require a running Minecraft client.
