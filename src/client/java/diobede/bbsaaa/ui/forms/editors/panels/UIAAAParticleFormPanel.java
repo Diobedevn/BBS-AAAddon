@@ -1,20 +1,22 @@
 package diobede.bbsaaa.ui.forms.editors.panels;
 
 import diobede.bbsaaa.forms.AAAParticleForm;
-import diobede.bbsaaa.forms.renderers.AAAParticleFormRenderer;
 import diobede.bbsaaa.forms.renderers.BBSEffectLoader;
+import diobede.bbsaaa.forms.renderers.AAAParticleFormRenderer;
+import diobede.bbsaaa.particles.ParticleEffectIds;
+import diobede.bbsaaa.BBSAAaddon;
 
 import mchorse.bbs_mod.BBSMod;
-import mchorse.bbs_mod.forms.forms.Form;
+import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.l10n.L10n;
-import mchorse.bbs_mod.resources.Link;
+import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.ui.forms.editors.forms.UIForm;
 import mchorse.bbs_mod.ui.forms.editors.panels.UIFormPanel;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
+import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.input.UITexturePicker;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
-import mchorse.bbs_mod.ui.framework.elements.input.text.UITextbox;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIListOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.utils.UI;
@@ -30,24 +32,19 @@ import java.util.List;
  * AAA Particle Form Panel
  *
  * UI panel for editing AAA Particle (Effekseer) form properties.
- * Provides controls for effect selection, playback, bone attachment, and transform.
+ * Effect selection and playback controls. Spatial transforms belong to CML.
  */
 public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
 {
     public UIButton pickEffect;
     public UIButton reloadEffects;
     public UIButton pickPreview;
-    public UITextbox bone;
     public UIToggle paused;
-    public UIToggle restart;
+    public UIButton restartPreview;
     public UIToggle loop;
-    public UITrackpad duration;
     public UITrackpad speed;
     public UITrackpad particleScale;
-    public UITrackpad sortingLayer;
-    public UIToggle worldSpace;
-
-    private List<String> cachedEffects;
+    private final UIElement legacyScaleControls;
 
     public UIAAAParticleFormPanel(UIForm editor)
     {
@@ -58,54 +55,47 @@ public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
         this.reloadEffects = new UIButton(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.reload_effects"), (b) ->
         {
             BBSEffectLoader.requestReload();
-            this.cachedEffects = null;
         });
 
         this.pickPreview = new UIButton(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.preview"), (b) ->
         {
             UITexturePicker.open(this.getContext(), this.form.preview.get(), (l) -> this.form.preview.set(l));
         });
-
-        this.bone = new UITextbox(120, (t) -> this.form.bone.set(t));
-        this.bone.tooltip(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.bone.tooltip"));
+        this.pickPreview.tooltip(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.preview.tooltip"));
 
         this.paused = new UIToggle(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.paused"), (b) -> this.form.paused.set(b.getValue()));
-        this.restart = new UIToggle(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.restart"), (b) -> this.form.restart.set(b.getValue()));
+        this.restartPreview = new UIButton(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.restart_preview"), (b) ->
+        {
+            if (this.form != null && FormUtilsClient.getRenderer(this.form) instanceof AAAParticleFormRenderer renderer)
+            {
+                renderer.restartPreview();
+            }
+        });
+        this.restartPreview.tooltip(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.restart_preview.tooltip"));
         this.loop = new UIToggle(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.loop"), (b) -> this.form.loop.set(b.getValue()));
         this.loop.tooltip(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.loop.tooltip"));
 
-        this.duration = new UITrackpad((v) -> this.form.duration.set(v.intValue()));
-        this.duration.limit(0).integer();
-        this.duration.tooltip(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.duration.tooltip"));
-
         this.speed = new UITrackpad((v) -> this.form.speed.set(v.floatValue()));
         this.speed.limit(0.01D, 10D);
+        this.speed.tooltip(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.speed.tooltip"));
 
         this.particleScale = new UITrackpad((v) -> this.form.particleScale.set(v.floatValue()));
         this.particleScale.limit(0.01D, 100D);
-
-        this.sortingLayer = new UITrackpad((v) -> this.form.sortingLayer.set(v.intValue()));
-        this.sortingLayer.integer();
-
-        this.worldSpace = new UIToggle(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.world_space"), (b) -> this.form.worldSpace.set(b.getValue()));
-        this.worldSpace.tooltip(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.world_space.tooltip"));
+        this.particleScale.tooltip(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.legacy_scale.tooltip"));
+        this.legacyScaleControls = UI.column(5,
+            UI.label(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.legacy_scale")), this.particleScale);
 
         this.options.add(UI.label(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.effect")), this.pickEffect);
         this.options.add(this.reloadEffects);
         this.options.add(this.pickPreview);
-        this.options.add(UI.label(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.bone")), this.bone);
-        this.options.add(this.paused, this.restart, this.loop);
-        this.options.add(UI.label(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.duration")), this.duration);
+        this.options.add(this.paused, this.loop, this.restartPreview);
         this.options.add(UI.label(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.speed")), this.speed);
-        this.options.add(UI.label(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.scale")), this.particleScale);
-        this.options.add(UI.label(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.sorting_layer")), this.sortingLayer);
-        this.options.add(this.worldSpace);
     }
 
     private void openPicker()
     {
-        this.cachedEffects = new ArrayList<>();
-        this.populateEffects(this.cachedEffects);
+        List<String> effects = new ArrayList<>();
+        this.populateEffects(effects);
 
         UIListOverlayPanel panel = new UIListOverlayPanel(
             L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.select_effect"),
@@ -118,7 +108,7 @@ public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
             }
         );
 
-        panel.addValues(this.cachedEffects);
+        panel.addValues(effects);
         UIOverlay.addOverlay(this.getContext(), panel, 0.5F, 0.7F);
     }
 
@@ -136,7 +126,7 @@ public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            BBSAAaddon.LOGGER.error("Failed to list external particle effects", e);
         }
 
         Collections.sort(list);
@@ -162,7 +152,10 @@ public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
             else if (file.getName().endsWith(".efkefc"))
             {
                 String key = namespace + ":" + path.substring(0, path.length() - 7);
-                list.add(key);
+                if (Identifier.tryParse(key) != null)
+                {
+                    list.add(key);
+                }
             }
         }
     }
@@ -172,85 +165,46 @@ public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
         if (effectId == null || effectId.isEmpty())
         {
             this.form.effect.set(null);
+            this.updateEffectLabel();
             return;
         }
 
-        int separator = effectId.indexOf(':');
-
-        if (separator <= 0 || separator >= effectId.length() - 1)
+        Identifier id = Identifier.tryParse(effectId);
+        if (id != null)
         {
-            return;
+            this.form.effect.set(ParticleEffectIds.toLink(id));
+            this.updateEffectLabel();
         }
-
-        String namespace = effectId.substring(0, separator);
-        String path = effectId.substring(separator + 1);
-        Identifier id = Identifier.of(namespace, path);
-
-        /* Create link with effeks/ prefix */
-        this.form.effect.set(new Link(id.getNamespace(), "effeks/" + id.getPath() + ".efkefc"));
     }
 
     private String getCurrentEffectId()
     {
-        Link effect = this.form.effect.get();
+        Identifier id = ParticleEffectIds.fromLink(this.form.effect.get());
+        return id == null ? null : id.toString();
+    }
 
-        if (effect == null)
-        {
-            return null;
-        }
-
-        String path = effect.path;
-
-        if (path == null)
-        {
-            return null;
-        }
-
-        if (path.startsWith("effeks/"))
-        {
-            path = path.substring(7);
-        }
-
-        if (path.endsWith(".efkefc"))
-        {
-            path = path.substring(0, path.length() - 7);
-        }
-
-        return effect.source + ":" + path;
+    private void updateEffectLabel()
+    {
+        String currentEffect = this.getCurrentEffectId();
+        this.pickEffect.label = currentEffect == null
+            ? L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.pick_effect") : IKey.raw(currentEffect);
     }
 
     @Override
     public void startEdit(AAAParticleForm form)
     {
         super.startEdit(form);
-
-        String currentEffect = this.getCurrentEffectId();
-
-        if (currentEffect != null)
-        {
-            this.pickEffect.label = L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.pick_effect").format(currentEffect);
-        }
-        else
-        {
-            this.pickEffect.label = L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.pick_effect");
-        }
+        this.updateEffectLabel();
 
         /* Update UI values */
-        this.bone.setText(form.bone.get());
         this.paused.setValue(form.paused.get());
-        this.restart.setValue(form.restart.get());
         this.loop.setValue(form.loop.get());
-        this.duration.setValue(form.duration.get());
         this.speed.setValue(form.speed.get());
         this.particleScale.setValue(form.particleScale.get());
-        this.sortingLayer.setValue(form.sortingLayer.get());
-        this.worldSpace.setValue(form.worldSpace.get());
-    }
-
-    @Override
-    public void pickBone(String bone)
-    {
-        this.bone.setText(bone);
-        this.form.bone.set(bone);
+        this.legacyScaleControls.removeFromParent();
+        if (Float.compare(form.particleScale.get(), 1F) != 0)
+        {
+            this.options.add(this.legacyScaleControls);
+        }
     }
 }

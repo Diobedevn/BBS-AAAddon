@@ -15,6 +15,12 @@
 	"license": "CC0-1.0",
 	"icon": "assets/bbs-aaaddon/icon.png",
 	"environment": "*",
+	"mixins": [
+		{
+			"config": "bbs-aaaddon.client.mixins.json",
+			"environment": "client"
+		}
+	],
 	"entrypoints": {
 		"main": [
 			"diobede.bbsaaa.BBSAAaddon"

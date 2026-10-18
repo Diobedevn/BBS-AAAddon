@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "diobede.bbsaaa.mixin.client",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "AAARenderContextMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

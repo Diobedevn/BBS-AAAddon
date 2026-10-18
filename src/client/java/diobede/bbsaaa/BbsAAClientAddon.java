@@ -5,6 +5,7 @@ import diobede.bbsaaa.forms.renderers.AAAParticleFormRenderer;
 import diobede.bbsaaa.forms.renderers.BBSEffectLoader;
 import diobede.bbsaaa.ui.forms.editors.forms.UIAAAParticleForm;
 import diobede.bbsaaa.forms.AAAParticleSection;
+import diobede.bbsaaa.particles.FilmPlaybackTracker;
 
 import mchorse.bbs_mod.api.BBSAddonMod;
 import mchorse.bbs_mod.api.Subscribe;
@@ -18,8 +19,8 @@ import mchorse.bbs_mod.l10n.L10n;
 import mchorse.bbs_mod.resources.Link;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class BbsAAClientAddon implements BBSAddonMod
@@ -28,7 +29,7 @@ public class BbsAAClientAddon implements BBSAddonMod
     private static final String GROUP_KEY = "bbsaaa.ui.forms.categories.aaa_particles";
 
     /* Animatable properties that are specific to the AAA particle form */
-    private static final String[] TRACKS = {"restart", "speed", "particleScale", "sortingLayer", "worldSpace"};
+    private static final String[] TRACKS = {"paused", "loop", "speed", "restart", "particleScale"};
 
     @Override
     public int requiredApiVersion()
@@ -39,8 +40,22 @@ public class BbsAAClientAddon implements BBSAddonMod
     @Override
     public void initialize(mchorse.bbs_mod.api.AddonContext context)
     {
-        /* Global cleanup watchdog: stops effects whose form renderer is no longer active */
+        FilmPlaybackTracker.initialize();
         ClientTickEvents.END_CLIENT_TICK.register((client) -> BbsAAClientAddon.tickCleanup());
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> cleanup());
+    }
+
+    @Override
+    public void shutdown(mchorse.bbs_mod.api.AddonContext context)
+    {
+        cleanup();
+    }
+
+    private static void cleanup()
+    {
+        AAAParticleFormRenderer.cleanupAll();
+        BBSEffectLoader.clearCache();
+        FilmPlaybackTracker.clear();
     }
 
     private static void tickCleanup()
@@ -49,11 +64,7 @@ public class BbsAAClientAddon implements BBSAddonMod
         {
             try
             {
-                for (AAAParticleFormRenderer renderer : new ArrayList<>(AAAParticleFormRenderer.activeRenderers))
-                {
-                    renderer.cleanup();
-                }
-
+                AAAParticleFormRenderer.cleanupAll();
                 BBSEffectLoader.clearCache();
             }
             finally
@@ -62,13 +73,7 @@ public class BbsAAClientAddon implements BBSAddonMod
             }
         }
 
-        if (!AAAParticleFormRenderer.activeRenderers.isEmpty())
-        {
-            for (AAAParticleFormRenderer renderer : new ArrayList<>(AAAParticleFormRenderer.activeRenderers))
-            {
-                renderer.checkCleanup();
-            }
-        }
+        AAAParticleFormRenderer.checkActiveRenderers();
     }
 
     @Subscribe
