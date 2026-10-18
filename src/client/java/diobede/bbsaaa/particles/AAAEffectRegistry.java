@@ -5,8 +5,7 @@ import mod.chloeprime.aaaparticles.api.client.EffectDefinition;
 import mod.chloeprime.aaaparticles.api.client.EffectHolder;
 import mod.chloeprime.aaaparticles.api.client.EffectMetadata;
 import mod.chloeprime.aaaparticles.client.loader.EffekAssetLoader;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.resources.Identifier;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;

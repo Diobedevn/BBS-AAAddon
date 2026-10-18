@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.17-SNAPSHOT'
+	id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -46,26 +46,24 @@ fabricApi {
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	// Release jars use intermediary mappings; Loom remaps them for development.
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	// Minecraft 26.1 uses unobfuscated names; no Yarn mappings or remapping needed.
 	if (!file(project.bbs_dev_jar).isFile()) {
 		throw new GradleException("Missing BBS CML jar: ${project.bbs_dev_jar}. Place the release jar in libs/ or set -Pbbs_dev_jar=<path>.")
 	}
-	modImplementation files(project.bbs_dev_jar)
+	implementation files(project.bbs_dev_jar)
 
 	// Optional shader integrations that BBS mixins target; required for the dev runtime.
-	modImplementation "maven.modrinth:sodium:mc1.21.1-0.6.13-fabric"
-	modImplementation "maven.modrinth:iris:1.8.8+1.21.1-fabric"
-	modImplementation "org.anarres:jcpp:1.4.14"
-	modImplementation "io.github.douira:glsl-transformer:2.0.0-pre13"
+	implementation "maven.modrinth:sodium:mc26.1.1-0.8.9-fabric"
+	implementation "maven.modrinth:iris:1.10.9+26.1-fabric"
+	implementation "org.anarres:jcpp:1.4.14"
+	implementation "io.github.douira:glsl-transformer:3.0.0-pre3"
 
-	modImplementation "maven.modrinth:aaa-particles:fabric-1.21.1-2.2.3"
-	modImplementation "dev.architectury:architectury-fabric:13.0.8"
-	modImplementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:21.1.1"
+	// AAA bundles its matching Architectury and Forge Config API Port versions.
+	implementation "maven.modrinth:aaa-particles:${project.aaa_particles_version}"
 
 	testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
 	testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.11.4"
@@ -84,13 +82,16 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	it.options.release = 25
 }
 
 java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
 
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
 }
 
 jar {

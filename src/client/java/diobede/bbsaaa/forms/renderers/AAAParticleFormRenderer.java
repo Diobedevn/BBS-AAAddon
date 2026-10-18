@@ -16,7 +16,7 @@ import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.framework.UIContext;
 import mod.chloeprime.aaaparticles.api.client.effekseer.ParticleEmitter;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
@@ -146,7 +146,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
         this.allowsUnboundEntity = isPreview || context.type == FormRenderType.MODEL_BLOCK;
         this.playback.tick(context.entity.getAge(), this.form.restart.get());
         ParticleEmitter emitter = this.playback.update(this.form, ParticleEffectIds.fromLink(this.form.effect.get()),
-            isPreview, FilmPlaybackTracker.isPaused(context.entity), MinecraftClient.getInstance().isPaused());
+            isPreview, FilmPlaybackTracker.isPaused(context.entity), Minecraft.getInstance().isPaused());
 
         if (this.playback.getEmitter() != null)
         {
@@ -188,9 +188,9 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
     {
         // FormRenderer already applied pivot, rotation and scale. Preserve its matrix
         // rather than decomposing Euler angles or applying the transform twice.
-        // In 1.21.1 the world MatrixStack is camera-relative without view rotation;
+        // The world PoseStack is camera-relative without view rotation;
         // the separate view matrix must not be inverted into this transform.
-        Matrix4f matrix = new Matrix4f(context.stack.peek().getPositionMatrix());
+        Matrix4f matrix = new Matrix4f(context.stack.last().pose());
         Vector3f position = matrix.getTranslation(new Vector3f());
         float scale = this.form.particleScale.get();
         emitter.setTransformMatrix(new float[] {

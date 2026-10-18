@@ -20,9 +20,7 @@ import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIListOverlayPanel;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIOverlay;
 import mchorse.bbs_mod.ui.utils.UI;
-
-import net.minecraft.util.Identifier;
-
+import net.minecraft.resources.Identifier;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;

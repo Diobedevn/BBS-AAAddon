@@ -1,7 +1,7 @@
 package diobede.bbsaaa.particles;
 
 import mchorse.bbs_mod.resources.Link;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 /** One conversion shared by the picker and playback; saved links stay unchanged. */
 public final class ParticleEffectIds

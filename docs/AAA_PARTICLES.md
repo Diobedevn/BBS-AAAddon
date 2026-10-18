@@ -1,17 +1,20 @@
-# AAA Particles integration for CML 3.0
+# AAA Particles integration for CML 3.0 on Minecraft 26.1.2
 
 The addon registers the existing `bbs:aaa_particle` form using CML addon API 2.
 Saved property names and effect links remain unchanged.
 
 ## Build
 
-- Minecraft 1.21.1, Fabric, AAA Particles 2.2.3 and CML 3.0 beta 2.
-- Run the current Gradle wrapper with JDK 25. The addon bytecode targets Java 21.
-- Place `bbs-cml-3.0-beta-2-1.21.1.jar` in `libs/`, then run `./gradlew build`
+- Minecraft 26.1.2, Fabric API 0.145.4, AAA Particles 2.2.3 and CML 3.0 beta 2.
+- Run the current Gradle wrapper with JDK 25. The addon bytecode targets Java 25.
+- Place `bbs-cml-3.0-beta-2-26.1.jar` in `libs/`, then run `./gradlew build`
   (`.\gradlew.bat build` on Windows).
-- To use a different intermediary release jar, pass `-Pbbs_dev_jar=<path>`.
-  Loom remaps the release jar for the development environment; a named development
-  jar is not interchangeable with an intermediary release jar.
+- The CML jar keeps its `26.1` filename; its metadata explicitly supports 26.1.2.
+- To use a different compatible CML release jar, pass `-Pbbs_dev_jar=<path>`.
+  Minecraft 26.1 uses unobfuscated Mojang names. This branch uses the
+  `net.fabricmc.fabric-loom` plugin without Yarn mappings or intermediary remapping.
+- AAA Particles `fabric-26.1.2-2.2.3` requires Minecraft 26.1.2. AAA bundles its compatible
+  Architectury and Forge Config API Port jars; do not add the 1.21.1 versions.
 - The local CML jar is ignored by Git. A fresh checkout or CI runner must provision
   it before building. The build reports its missing path explicitly.
 - `./gradlew test` runs the playback state regression tests without Minecraft or
@@ -74,8 +77,9 @@ presentations; legacy extra scale retains its track presentation too.
 - `PlaybackState`: pure Java clock and restart bookkeeping, covered by unit tests.
 - `FilmPlaybackTracker`: reads actual controller pause state through CML lifecycle
   events rather than treating a slow tick as a paused film.
-- `AAAPreviewRenderer`: typed Fabric preview calls and a camera subclass. Minecraft
-  method names are remapped by Loom; no reflective camera lookup is required.
+- `AAAPreviewRenderer`: typed AAA 2.2.3 preview calls, a camera subclass, and a
+  `CameraRenderState` containing CML's preview position, orientation and projection.
+  No reflective camera lookup is required. The camera orientation includes roll.
 - `BBSEffectLoader`: external effect and dependency loading.
 - `AAAEffectRegistry`: isolated access to AAA's private effect registry. Cleanup
   removes only holders owned by this addon, preserving replacements from reloads.

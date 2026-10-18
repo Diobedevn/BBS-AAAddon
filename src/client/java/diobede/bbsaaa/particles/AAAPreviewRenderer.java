@@ -1,30 +1,46 @@
 package diobede.bbsaaa.particles;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mod.chloeprime.aaaparticles.client.render.EffekRenderer;
-import net.minecraft.client.render.Camera;
-import net.minecraft.util.Hand;
+import net.minecraft.client.Camera;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.client.renderer.state.level.CameraRenderState;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
-/** Fabric 1.21.1 preview bridge; method references are remapped by Loom. */
+/** AAA 2.2.3 preview bridge for Minecraft 26.1.2's extracted camera render state. */
 public final class AAAPreviewRenderer
 {
     private final PreviewCamera camera = new PreviewCamera();
+    private final CameraRenderState cameraState = new CameraRenderState();
 
     public void render(FormRenderingContext context)
     {
         this.camera.configure(context.camera);
-        EffekRenderer.onRenderHand(context.transition, Hand.MAIN_HAND, context.stack,
-            RenderSystem.getProjectionMatrix(), this.camera);
+        this.cameraState.pos = this.camera.position();
+        this.cameraState.orientation.set(this.camera.rotation());
+        this.cameraState.initialized = true;
+        this.cameraState.projectionMatrix.set(context.camera.projection);
+        this.cameraState.viewRotationMatrix.set(context.camera.view);
+        EffekRenderer.onRenderHand(context.transition, InteractionHand.MAIN_HAND, context.stack,
+            context.camera.projection, this.camera, this.cameraState);
     }
 
     private static final class PreviewCamera extends Camera
     {
+        private final Vector3f forward = new Vector3f();
+
         private void configure(mchorse.bbs_mod.camera.Camera source)
         {
-            this.setPos(source.position.x, source.position.y, source.position.z);
-            this.setRotation((float) Math.toDegrees(source.rotation.y) - 180F,
-                (float) Math.toDegrees(source.rotation.x));
+            this.setPosition(source.position.x, source.position.y, source.position.z);
+            this.rotation().setFromNormalized(source.view).conjugate();
+            this.rotation().transform(this.forward.set(0, 0, -1));
+        }
+
+        @Override
+        public Vector3fc forwardVector()
+        {
+            return this.forward;
         }
     }
 }

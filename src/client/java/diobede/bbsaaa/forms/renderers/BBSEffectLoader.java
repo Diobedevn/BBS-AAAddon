@@ -2,9 +2,6 @@ package diobede.bbsaaa.forms.renderers;
 
 import mchorse.bbs_mod.BBSMod;
 import diobede.bbsaaa.particles.AAAEffectRegistry;
-
-import net.minecraft.util.Identifier;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -20,6 +17,7 @@ import mod.chloeprime.aaaparticles.api.client.effekseer.EffekseerEffect;
 import mod.chloeprime.aaaparticles.api.client.effekseer.TextureType;
 import mod.chloeprime.aaaparticles.client.loader.EffekAssetLoader;
 import mod.chloeprime.aaaparticles.client.render.RenderUtil;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -375,7 +373,7 @@ public class BBSEffectLoader
 
             try
             {
-                id = Identifier.of("bbs", relative);
+                id = Identifier.fromNamespaceAndPath("bbs", relative);
             }
             catch (Exception e)
             {
