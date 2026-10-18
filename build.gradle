@@ -61,8 +61,8 @@ dependencies {
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	// BBS CML 3.0 is compiled against its named development jar (not remapped).
-	implementation files(project.bbs_dev_jar)
+	// BBS CML 3.0 jar
+	modImplementation files(project.bbs_dev_jar)
 
 	// Optional shader integrations that BBS mixins target; required for the dev runtime.
 	modImplementation "maven.modrinth:sodium:mc1.20.1-0.5.13-fabric"

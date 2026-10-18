@@ -43,5 +43,6 @@ replay_*.log
 # open source
 
 open-source/
+libs/
 /BBS/
 /AAAParticles/
