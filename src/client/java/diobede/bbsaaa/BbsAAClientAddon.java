@@ -29,7 +29,7 @@ public class BbsAAClientAddon implements BBSAddonMod
     private static final String GROUP_KEY = "bbsaaa.ui.forms.categories.aaa_particles";
 
     /* Animatable properties that are specific to the AAA particle form */
-    private static final String[] TRACKS = {"restart", "speed", "particleScale", "sortingLayer", "worldSpace"};
+    private static final String[] TRACKS = {"paused", "loop", "speed", "restart", "particleScale"};
 
     @Override
     public int requiredApiVersion()

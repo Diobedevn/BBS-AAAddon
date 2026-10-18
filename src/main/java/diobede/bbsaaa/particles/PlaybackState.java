@@ -32,6 +32,12 @@ public final class PlaybackState
         return requested;
     }
 
+    /** A repeatable editor action, independent of the saved restart keyframe. */
+    public void requestRestart()
+    {
+        this.restartRequested = true;
+    }
+
     public float advance(long nowNanos, float speed, boolean paused)
     {
         if (this.lastFrameNanos != 0 && !paused)

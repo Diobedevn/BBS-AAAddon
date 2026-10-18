@@ -16,7 +16,6 @@ import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.framework.UIContext;
-import mchorse.bbs_mod.utils.pose.Transform;
 import mod.chloeprime.aaaparticles.api.client.effekseer.ParticleEmitter;
 import net.minecraft.client.MinecraftClient;
 import org.joml.Matrix4f;
@@ -48,6 +47,11 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
     public ParticleEmitter getEmitter()
     {
         return this.playback.getEmitter();
+    }
+
+    public void restartPreview()
+    {
+        this.playback.requestRestart();
     }
 
     /** Do not call exists(): AAA's before-hand and tail checks must agree even
@@ -160,11 +164,13 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
 
         if (isPreview)
         {
-            Transform transform = this.form.transform.get();
-            emitter.setPosition(transform.translate.x, transform.translate.y, transform.translate.z);
-            emitter.setRotation(transform.rotate.x, transform.rotate.y, transform.rotate.z);
+            // AAA receives context.stack, which already contains CML's full
+            // transform, including pivot and overlays. Keep the emitter local
+            // to avoid applying translation, rotation and scale a second time.
+            emitter.setPosition(0, 0, 0);
+            emitter.setRotation(0, 0, 0);
             float scale = this.form.particleScale.get();
-            emitter.setScale(transform.scale.x * scale, transform.scale.y * scale, transform.scale.z * scale);
+            emitter.setScale(scale, scale, scale);
         }
         else
         {

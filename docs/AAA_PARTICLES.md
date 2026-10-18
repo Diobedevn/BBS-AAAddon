@@ -33,6 +33,39 @@ Use **Reload Effects** after adding or repairing files. Reload stops active
 emitters, releases addon-owned effect holders, and clears both successful and
 failed load bookkeeping. Failed files are not retried every render frame.
 
+## Editor controls
+
+- **Effect** selects the effect file and displays its current identifier.
+- **Reload Effects** rescans resources on the next client tick, stopping all addon
+  emitters and releasing their effect holders. It is for changed files, not for
+  replaying a single effect.
+- **Thumbnail** selects the image shown in the form palette. It does not change
+  the 3D effect or its rendering.
+- **Paused** freezes the effect independently of the film pause state.
+- **Loop** restarts an effect after its native simulation finishes. An effect
+  authored to emit forever never finishes, so this toggle cannot impose a duration.
+- **Speed** changes simulation time; it is independent of spatial Transform.
+- **Restart preview** is a repeatable, transient editor action. It works even after
+  a non-looping effect has ended and does not write a value into the saved form.
+  For film keyframes, the existing `restart` property remains available as
+  **Restart trigger**: false to true fires once; held true does not keep restarting.
+
+Use CML's normal **Transform** panel for position, rotation, pivot and scale.
+The preview now uses the already-transformed matrix from CML without applying
+the emitter transform twice.
+
+The old `particleScale` uniform multiplier still applies and remains available to
+existing animation tracks. Its **Additional scale (legacy)** control is shown
+when opening a form with a value other than 1. This prevents an old multiplier
+from becoming invisible and uneditable. New forms use Transform; setting the
+legacy multiplier back to 1 removes its contribution. It is not automatically
+folded into Transform, which could change pivots, child forms or saved keyframes.
+
+The unused `bone`, `duration`, `sortingLayer` and `worldSpace` properties are hidden
+from the panel and new-property picker. Their values are still serialized. They
+have no effect in the current renderer. Paused, loop, speed and restart have track
+presentations; legacy extra scale retains its track presentation too.
+
 ## Responsibilities
 
 - `AAAParticleForm`: serialized properties; no native or client dependencies.
@@ -79,8 +112,8 @@ historical particle simulation. The former tick cache did not contain simulation
 state and has been removed. Playback still uses elapsed time, so deterministic
 film export and exact seeking require a separate timeline-driven implementation.
 
-`bone`, `duration`, `sortingLayer` and `worldSpace` remain serialized and visible
-for compatibility, but their behavior has not been implemented in this phase.
+`bone`, `duration`, `sortingLayer` and `worldSpace` remain serialized for
+compatibility but are hidden from the editor because they are not implemented.
 Dynamic Effekseer inputs are not currently exposed by this form.
 
 AAA's private registry integration remains version-sensitive, although it is now
@@ -93,7 +126,9 @@ still require in-game validation.
 After building, check one short effect and one continuous effect in CML:
 
 1. Select and preview an effect; change its scale and rotations beyond 90 degrees.
-2. Test pause, speeds 0.5/1/2, restart held across several ticks, and natural looping.
+2. Test pause, speeds 0.5/1/2, repeated **Restart preview** clicks, and natural looping.
+   Also hold a restart keyframe true across several ticks; it should fire only once.
+   Open an old form with extra scale other than 1 and verify its legacy control.
 3. Pause/resume a film and seek forward/backward; seeking should restart the effect.
 4. Test a model block and an actor, then remove them and close the film.
 5. Reload effects, repair a missing effect and reload again, then leave/rejoin a world.

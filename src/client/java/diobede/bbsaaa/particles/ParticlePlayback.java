@@ -28,6 +28,11 @@ public final class ParticlePlayback
         this.state.observeTick(tick, restart);
     }
 
+    public void requestRestart()
+    {
+        this.state.requestRestart();
+    }
+
     public ParticleEmitter update(AAAParticleForm form, Identifier id, boolean preview,
         boolean filmPaused, boolean gamePaused)
     {

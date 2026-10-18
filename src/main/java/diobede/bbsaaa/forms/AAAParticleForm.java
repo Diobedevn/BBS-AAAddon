@@ -12,7 +12,8 @@ import mchorse.bbs_mod.settings.values.numeric.ValueInt;
  * AAA Particle Form
  *
  * This form renders Effekseer particles using the AAA Particles mod.
- * Supports bone attachment, looping, duration control, and transform animations.
+ * Supports playback control and CML transforms. Legacy properties remain saved
+ * so existing projects and animation tracks keep their original values.
  */
 public class AAAParticleForm extends Form
 {
@@ -34,7 +35,7 @@ public class AAAParticleForm extends Form
     /* Speed multiplier for particle playback */
     public final ValueFloat speed = new ValueFloat("speed", 1F);
 
-    /* Particle scale multiplier (separate from transform scale) */
+    /* Legacy uniform multiplier; new forms should use CML's transform scale. */
     public final ValueFloat particleScale = new ValueFloat("particleScale", 1F);
 
     /* Sorting layer - higher values render on top */
@@ -49,6 +50,13 @@ public class AAAParticleForm extends Form
 
         this.effect.invisible();
         this.preview.invisible();
+
+        // Retain serialized data without advertising controls that are not applied
+        // by the renderer. Visibility only affects CML's property picker.
+        this.bone.invisible();
+        this.duration.invisible();
+        this.sortingLayer.invisible();
+        this.worldSpace.invisible();
 
         this.add(this.effect);
         this.add(this.preview);

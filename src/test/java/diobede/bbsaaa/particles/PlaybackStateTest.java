@@ -55,6 +55,24 @@ class PlaybackStateTest
     }
 
     @Test
+    void previewRestartCanBeRepeatedWithoutRearmingAHeldKeyframe()
+    {
+        PlaybackState state = new PlaybackState();
+        state.observeTick(10, true);
+        assertTrue(state.consumeRestart());
+
+        state.requestRestart();
+        assertTrue(state.consumeRestart());
+        state.resetProgress();
+        state.observeTick(11, true);
+        assertFalse(state.consumeRestart());
+
+        state.requestRestart();
+        assertTrue(state.consumeRestart());
+        assertFalse(state.consumeRestart());
+    }
+
+    @Test
     void speedChangesPreserveAccumulatedProgress()
     {
         PlaybackState state = new PlaybackState();
