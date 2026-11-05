@@ -1,130 +1,76 @@
 plugins {
-	id 'fabric-loom' version '1.17-SNAPSHOT'
-	id 'maven-publish'
+    id 'fabric-loom' version '1.17.21' apply false
+    id 'net.fabricmc.fabric-loom' version '1.17.21' apply false
+    id 'maven-publish'
 }
-
-version = project.mod_version + "-" + minecraft_version
+if (gradle.startParameter.taskNames.any { it.tokenize(':').last() == 'buildAll' }) {
+    apply from: 'gradle/build-all.gradle'
+    return
+}
+apply from: 'gradle/minecraft-targets.gradle'
+def target = minecraftTarget
+def official = target.namespace == 'official'
+apply plugin: official ? 'net.fabricmc.fabric-loom' : 'fabric-loom'
+ext.set('fabric.loom.runtimeJavaCompatibilityVersion', target.java.toString())
+apply from: 'gradle/local-cml.gradle'
+version = project.mod_version + '-' + minecraft_version
 group = project.maven_group
-
-base {
-	archivesName = project.archives_base_name
-}
-
+base { archivesName = project.archives_base_name }
 repositories {
-	maven {
-		name = "Modrinth"
-		url = "https://api.modrinth.com/maven"
-		content {
-			includeGroup "maven.modrinth"
-		}
-	}
-	maven { url "https://maven.architectury.dev/" }
-	maven {
-		name = "Fuzs Mod Resources"
-		url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven/"
-	}
+    maven { url = 'https://api.modrinth.com/maven'; content { includeGroup 'maven.modrinth' } }
+    maven { url = 'https://maven.architectury.dev/' }
+    maven { url = 'https://raw.githubusercontent.com/Fuzss/modresources/main/maven/' }
 }
-
 loom {
-	splitEnvironmentSourceSets()
-
-	mods {
-		"bbs-aaaddon" {
-			sourceSet sourceSets.main
-			sourceSet sourceSets.client
-		}
-	}
-
+    splitEnvironmentSourceSets()
+    mods { 'bbs-aaaddon' { sourceSet sourceSets.main; sourceSet sourceSets.client } }
 }
-configurations.all {
-    resolutionStrategy {
-        eachDependency { DependencyResolveDetails details ->
-            if (details.requested.group == 'org.lwjgl') {
-                details.useVersion '3.3.1'
-            }
+if (official) {
+    /* Identifier retained its simple name and member signatures. Only its package moved.
+     * All changed native calls live in the selected adapter, not this alias bridge. */
+    def prepare = tasks.register('prepareOfficialSources', Sync) {
+        from('src/client/java') {
+            filter { line -> line.replace('import net.minecraft.util.Identifier;', 'import net.minecraft.resources.Identifier;') }
         }
+        into file('build/source-bridge/official/client')
     }
+    sourceSets.client.java.setSrcDirs([file('build/source-bridge/official/client')])
+    tasks.named('compileClientJava') { dependsOn prepare }
 }
-
-
-fabricApi {
-	configureDataGeneration {
-		client = true
-	}
-}
-
+sourceSets.client.java.srcDir "src/platform/${target.adapter}/client/java"
+if (!official) sourceSets.client.java.srcDir 'src/platform/previewLegacy/client/java'
 dependencies {
-	// To change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	// Release jars use intermediary mappings; Loom remaps them for development.
-	if (!file(project.bbs_dev_jar).isFile()) {
-		throw new GradleException("Missing BBS CML jar: ${project.bbs_dev_jar}. Place the release jar in libs/ or set -Pbbs_dev_jar=<path>.")
-	}
-	modImplementation files(project.bbs_dev_jar)
-
-	// Optional shader integrations that BBS mixins target; required for the dev runtime.
-	modImplementation "maven.modrinth:sodium:mc1.20.1-0.5.13-fabric"
-	modImplementation "maven.modrinth:iris:1.7.6+1.20.1"
-	modImplementation "org.anarres:jcpp:1.4.14"
-	modImplementation "io.github.douira:glsl-transformer:2.0.0-pre13"
-
-	modImplementation "maven.modrinth:aaa-particles:fabric-1.20.1-2.2.3"
-	modImplementation "dev.architectury:architectury-fabric:9.2.14"
-	modImplementation "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:8.0.0"
-
-	testImplementation "org.junit.jupiter:junit-jupiter:5.11.4"
-	testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.11.4"
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    if (!official) mappings "net.fabricmc:yarn:${target.mappings}:v2"
+    def scope = official ? 'implementation' : 'modImplementation'
+    add(scope, "net.fabricmc:fabric-loader:${target.loader}")
+    add(scope, "net.fabricmc.fabric-api:fabric-api:${target.fabric}")
+    add(scope, files(localCmlJar))
+    add(scope, "maven.modrinth:sodium:${target.sodium}")
+    add(scope, "maven.modrinth:iris:${target.iris}")
+    add(scope, 'org.anarres:jcpp:1.4.14')
+    add(scope, "io.github.douira:glsl-transformer:${official ? '3.0.0-pre3' : '2.0.0-pre13'}")
+    add(scope, "maven.modrinth:aaa-particles:${target.aaa}")
+    if (!official) {
+        add(scope, "dev.architectury:architectury-fabric:${target.architectury}")
+        add(scope, "fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${target.forgeconfig}")
+    }
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.11.4'
 }
-
-test {
-	useJUnitPlatform()
-}
-
+test { useJUnitPlatform() }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.release = target.java }
+java { sourceCompatibility = JavaVersion.toVersion(target.java); targetCompatibility = JavaVersion.toVersion(target.java) }
 processResources {
-	inputs.property "version", project.version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": inputs.properties.version
-	}
+    def values = [version: project.version, minecraft_version: minecraft_version, java_version: target.java]
+    inputs.properties values
+    filesMatching('fabric.mod.json') { expand values }
+    filesMatching('bbs-aaaddon.client.mixins.json') { expand java_version: target.java }
 }
+jar { from('LICENSE') { rename { "${it}_${project.base.archivesName.get()}" } } }
+publishing { publications { mavenJava(MavenPublication) { from components.java } } }
+def production = tasks.named(official ? 'jar' : 'remapJar')
+tasks.register('collectReleaseJar', Copy) { dependsOn production; from production.flatMap { it.archiveFile }; into file('build/libs') }
+tasks.named('build') { dependsOn 'collectReleaseJar' }
 
-tasks.withType(JavaCompile).configureEach {
-	it.options.release = 17
-}
-
-java {
-
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_17
-}
-
-jar {
-	inputs.property "archivesName", project.base.archivesName
-
-	from("LICENSE") {
-		rename { "${it}_${inputs.properties.archivesName}"}
-	}
-}
-
-// configure the maven publication
-publishing {
-	publications {
-		create("mavenJava", MavenPublication) {
-			artifactId = project.archives_base_name
-			from components.java
-		}
-	}
-
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
-	}
-}
+if (providers.gradleProperty('portSmoke').isPresent()) apply from: 'gradle/smoke.gradle'

@@ -1,18 +1,19 @@
 package diobede.bbsaaa.particles;
 
-import diobede.bbsaaa.forms.AAAParticleForm;
-import diobede.bbsaaa.forms.renderers.BBSEffectLoader;
-import mod.chloeprime.aaaparticles.api.client.EffectDefinition;
-import mod.chloeprime.aaaparticles.api.client.effekseer.ParticleEmitter;
 import net.minecraft.util.Identifier;
 
 import java.util.Objects;
 import java.util.UUID;
 
+import diobede.bbsaaa.forms.AAAParticleForm;
+import diobede.bbsaaa.forms.renderers.BBSEffectLoader;
+import mod.chloeprime.aaaparticles.api.client.EffectDefinition;
+import mod.chloeprime.aaaparticles.api.client.effekseer.ParticleEmitter;
+
 /** Owns one native emitter; loading and creation only happen on the render path. */
 public final class ParticlePlayback
 {
-    private final Identifier name = new Identifier("bbs-aaaddon", "form_" + UUID.randomUUID().toString().replace("-", ""));
+    private final Identifier name = NativeParticlePlatform.identifier("bbs-aaaddon", "form_" + UUID.randomUUID().toString().replace("-", ""));
     private final PlaybackState state = new PlaybackState();
     private Identifier effectId;
     private ParticleEmitter.Type type;

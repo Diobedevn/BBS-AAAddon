@@ -1,11 +1,5 @@
 package diobede.bbsaaa.forms.renderers;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import diobede.bbsaaa.forms.AAAParticleForm;
-import diobede.bbsaaa.particles.AAAPreviewRenderer;
-import diobede.bbsaaa.particles.FilmPlaybackTracker;
-import diobede.bbsaaa.particles.ParticleEffectIds;
-import diobede.bbsaaa.particles.ParticlePlayback;
 import mchorse.bbs_mod.client.BBSRendering;
 import mchorse.bbs_mod.film.BaseFilmController;
 import mchorse.bbs_mod.forms.ITickable;
@@ -16,14 +10,21 @@ import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
 import mchorse.bbs_mod.graphics.texture.Texture;
 import mchorse.bbs_mod.resources.Link;
 import mchorse.bbs_mod.ui.framework.UIContext;
-import mod.chloeprime.aaaparticles.api.client.effekseer.ParticleEmitter;
-import net.minecraft.client.MinecraftClient;
+
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import diobede.bbsaaa.forms.AAAParticleForm;
+import diobede.bbsaaa.particles.AAAPreviewRenderer;
+import diobede.bbsaaa.particles.FilmPlaybackTracker;
+import diobede.bbsaaa.particles.NativeParticlePlatform;
+import diobede.bbsaaa.particles.ParticleEffectIds;
+import diobede.bbsaaa.particles.ParticlePlayback;
+import mod.chloeprime.aaaparticles.api.client.effekseer.ParticleEmitter;
 
 /** Form transforms and drawing. ParticlePlayback owns native emitter state. */
 public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> implements ITickable
@@ -147,7 +148,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
         this.allowsUnboundEntity = isPreview || context.type == FormRenderType.MODEL_BLOCK;
         this.playback.tick(context.entity.getAge(), this.form.restart.get());
         ParticleEmitter emitter = this.playback.update(this.form, ParticleEffectIds.fromLink(this.form.effect.get()),
-            isPreview, FilmPlaybackTracker.isPaused(context.entity), MinecraftClient.getInstance().isPaused());
+            isPreview, FilmPlaybackTracker.isPaused(context.entity), NativeParticlePlatform.paused());
 
         if (this.playback.getEmitter() != null)
         {
@@ -189,8 +190,7 @@ public class AAAParticleFormRenderer extends FormRenderer<AAAParticleForm> imple
     {
         // FormRenderer already applied pivot, rotation and scale. Preserve its matrix
         // rather than decomposing Euler angles or applying the transform twice.
-        Matrix4f matrix = new Matrix4f(RenderSystem.getInverseViewRotationMatrix());
-        matrix.mul(context.stack.peek().getPositionMatrix());
+        Matrix4f matrix = NativeParticlePlatform.matrix(context);
         Vector3f position = matrix.getTranslation(new Vector3f());
         float scale = this.form.particleScale.get();
         emitter.setTransformMatrix(new float[] {

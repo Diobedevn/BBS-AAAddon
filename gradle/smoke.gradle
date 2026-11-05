@@ -1,0 +1,20 @@
+sourceSets {
+    portSmoke {
+        java.srcDir file("build/validation/${minecraft_version}/sources")
+        resources.srcDir file("build/validation/${minecraft_version}/resources")
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    }
+}
+sourceSets.portSmoke.compileClasspath += sourceSets.client.output + sourceSets.client.compileClasspath
+sourceSets.client.runtimeClasspath += sourceSets.portSmoke.output
+loom {
+    mods { addon_port_smoke { sourceSet sourceSets.portSmoke } }
+    runs { client { runDir file("build/validation/${minecraft_version}/client").absolutePath } }
+}
+tasks.named('runClient') { dependsOn tasks.named('portSmokeClasses') }
+def runtimeFile = file('gradle/local-runtime.properties')
+def runtimes = new Properties()
+if (runtimeFile.isFile()) runtimeFile.withInputStream { runtimes.load(it) }
+def runtimeHome = providers.gradleProperty('runJavaHome').orNull ?: runtimes.getProperty('runJavaHome.' + minecraft_version)
+if (runtimeHome == null) throw new GradleException('Set -PrunJavaHome or gradle/local-runtime.properties for the matching client Java version.')
+tasks.withType(JavaExec).configureEach { executable = new File(runtimeHome, 'bin/java.exe') }

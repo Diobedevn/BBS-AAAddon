@@ -1,12 +1,15 @@
 package diobede.bbsaaa.particles;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import mchorse.bbs_mod.forms.renderers.FormRenderingContext;
-import mod.chloeprime.aaaparticles.client.render.EffekRenderer;
+
 import net.minecraft.client.render.Camera;
 import net.minecraft.util.Hand;
 
-/** Fabric 1.20.1 preview bridge; method references are remapped by Loom. */
+import com.mojang.blaze3d.systems.RenderSystem;
+
+import mod.chloeprime.aaaparticles.client.render.EffekRenderer;
+
+/** Legacy Fabric preview bridge; method references are remapped by Loom. */
 public final class AAAPreviewRenderer
 {
     private final PreviewCamera camera = new PreviewCamera();

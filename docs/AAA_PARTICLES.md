@@ -5,17 +5,7 @@ Saved property names and effect links remain unchanged.
 
 ## Build
 
-- Minecraft 1.20.1, Fabric, AAA Particles 2.2.3 and CML 3.0 beta 2.
-- Run the current Gradle wrapper with JDK 25. The addon bytecode targets Java 17.
-- Place `bbs-cml-3.0-beta-2-1.20.1.jar` in `libs/`, then run `./gradlew build`
-  (`.\gradlew.bat build` on Windows).
-- To use a different intermediary release jar, pass `-Pbbs_dev_jar=<path>`.
-  Loom remaps the release jar for the development environment; a named development
-  jar is not interchangeable with an intermediary release jar.
-- The local CML jar is ignored by Git. A fresh checkout or CI runner must provision
-  it before building. The build reports its missing path explicitly.
-- `./gradlew test` runs the playback state regression tests without Minecraft or
-  the native Effekseer runtime.
+The shared base targets Fabric 1.20.1, 1.21.1 and 26.1.2. Run the wrapper with JDK 25; the selected target emits Java 17, 21 or 25 bytecode. Place matching CML JARs in libs and run `./gradlew buildAll`; all installable JARs appear in build/libs. `./gradlew build -Pmc=1.21.1` builds one target. See [multiversion setup and validation](multiversion.md) for adapter boundaries, dependency selection and runtime checks.
 
 ## Effects
 
