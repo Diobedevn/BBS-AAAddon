@@ -23,7 +23,6 @@ public class AAAParticleSection extends FormSection
         super(parent);
     }
 
-    @Override
     public IKey getTitle()
     {
         return L10n.lang("bbsaaa.ui.forms.categories.aaa_particles");

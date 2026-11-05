@@ -12,7 +12,14 @@ def target = minecraftTarget
 def official = target.namespace == 'official'
 apply plugin: official ? 'net.fabricmc.fabric-loom' : 'fabric-loom'
 ext.set('fabric.loom.runtimeJavaCompatibilityVersion', target.java.toString())
-apply from: 'gradle/local-cml.gradle'
+if (providers.gradleProperty('fsCompileOnly').isPresent()) {
+    def hosts = new groovy.json.JsonSlurper().parse(file('gradle/fs-hosts.json'))
+    def fs = hosts.targets[minecraft_version]
+    if (fs == null) throw new GradleException("No FS host for ${minecraft_version}")
+    ext.localCmlJar = file("build/fs-compat/${minecraft_version}/${fs.filename}")
+} else {
+    apply from: 'gradle/local-cml.gradle'
+}
 version = project.mod_version + '-' + minecraft_version
 group = project.maven_group
 base { archivesName = project.archives_base_name }
@@ -23,7 +30,11 @@ repositories {
 }
 loom {
     splitEnvironmentSourceSets()
-    mods { 'bbs-aaaddon' { sourceSet sourceSets.main; sourceSet sourceSets.client } }
+    mods {
+        if (!providers.gradleProperty('distributionSmoke').isPresent()) {
+            'bbs-aaaddon' { sourceSet sourceSets.main; sourceSet sourceSets.client }
+        }
+    }
 }
 if (official) {
     /* Identifier retained its simple name and member signatures. Only its package moved.
@@ -45,7 +56,15 @@ dependencies {
     def scope = official ? 'implementation' : 'modImplementation'
     add(scope, "net.fabricmc:fabric-loader:${target.loader}")
     add(scope, "net.fabricmc.fabric-api:fabric-api:${target.fabric}")
-    add(scope, files(localCmlJar))
+    if (providers.gradleProperty('distributionSmoke').isPresent()) {
+        add('modCompileOnly', files(localCmlJar))
+        def fs = new groovy.json.JsonSlurper().parse(file('gradle/fs-hosts.json')).targets[minecraft_version]
+        def host = providers.gradleProperty('smokeHost').getOrElse('cml')
+        add('modRuntimeOnly', files(host == 'fs' ? file("build/fs-compat/${minecraft_version}/${fs.filename}") : localCmlJar))
+        add('modRuntimeOnly', files("build/libs/${base.archivesName.get()}-${project.version}.jar"))
+    } else {
+        add(scope, files(localCmlJar))
+    }
     add(scope, "maven.modrinth:sodium:${target.sodium}")
     add(scope, "maven.modrinth:iris:${target.iris}")
     add(scope, 'org.anarres:jcpp:1.4.14')
@@ -74,3 +93,5 @@ tasks.register('collectReleaseJar', Copy) { dependsOn production; from productio
 tasks.named('build') { dependsOn 'collectReleaseJar' }
 
 if (providers.gradleProperty('portSmoke').isPresent()) apply from: 'gradle/smoke.gradle'
+
+apply from: 'gradle/fs-compat.gradle'

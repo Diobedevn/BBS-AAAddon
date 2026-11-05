@@ -49,6 +49,7 @@ public final class AddonClientSmoke implements ClientModInitializer
     private void check()
     {
         AAAParticleForm form = new AAAParticleForm();
+        System.out.println("[Addon host] " + form.getClass().getProtectionDomain().getCodeSource().getLocation());
         form.effect.set(Link.create("bbs:effeks/validation/test.efkefc"));
         form.speed.set(1.5F);
         form.paused.set(true);

@@ -26,10 +26,16 @@
             "diobede.bbsaaa.BBSAAaddon"
         ],
         "bbs-addon": [
-            "diobede.bbsaaa.addon.BbsAAAddon"
+            {
+                "adapter": "bbsaaa-host",
+                "value": "diobede.bbsaaa.addon.BbsAAAddon"
+            }
         ],
         "bbs-client-addon": [
-            "diobede.bbsaaa.BbsAAClientAddon"
+            {
+                "adapter": "bbsaaa-host",
+                "value": "diobede.bbsaaa.BbsAAClientAddon"
+            }
         ]
     },
     "depends": {
@@ -39,5 +45,8 @@
         "fabric-api": "*",
         "bbs": ">=3.0-beta-7",
         "aaa_particles": "*"
+    },
+    "languageAdapters": {
+        "bbsaaa-host": "diobede.bbsaaa.compat.host.HostLanguageAdapter"
     }
 }

@@ -9,7 +9,7 @@ sourceSets.portSmoke.compileClasspath += sourceSets.client.output + sourceSets.c
 sourceSets.client.runtimeClasspath += sourceSets.portSmoke.output
 loom {
     mods { addon_port_smoke { sourceSet sourceSets.portSmoke } }
-    runs { client { runDir file("build/validation/${minecraft_version}/client").absolutePath } }
+    runs { client { runDir file(providers.gradleProperty("game_directory").getOrElse("build/validation/${minecraft_version}/client")).absolutePath } }
 }
 tasks.named('runClient') { dependsOn tasks.named('portSmokeClasses') }
 def runtimeFile = file('gradle/local-runtime.properties')
@@ -18,3 +18,14 @@ if (runtimeFile.isFile()) runtimeFile.withInputStream { runtimes.load(it) }
 def runtimeHome = providers.gradleProperty('runJavaHome').orNull ?: runtimes.getProperty('runJavaHome.' + minecraft_version)
 if (runtimeHome == null) throw new GradleException('Set -PrunJavaHome or gradle/local-runtime.properties for the matching client Java version.')
 tasks.withType(JavaExec).configureEach { executable = new File(runtimeHome, 'bin/java.exe') }
+
+sourceSets.portSmoke.compileClasspath += files("build/fs-compat/${minecraft_version}/classes-build/classes/java/main",
+    "build/fs-compat/${minecraft_version}/classes-build/classes/java/client")
+if (providers.gradleProperty('distributionSmoke').isPresent()) {
+    tasks.named('runClient') {
+        def excluded = (sourceSets.main.output.files + sourceSets.client.output.files).collect { it.canonicalFile }
+        classpath = classpath.filter { !excluded.contains(it.canonicalFile) }
+    }
+}
+
+tasks.named('compilePortSmokeJava') { dependsOn { tasks.findByName('compileFsCompatibility') == null ? [] : [tasks.named('compileFsCompatibility')] } }

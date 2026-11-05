@@ -1,0 +1,19 @@
+{
+    "package": "diobede.bbsaaa",
+    "targets": {
+        "1.20.1": {
+            "version": "2.7-1.20.1",
+            "version_id": "tD7xHigj",
+            "filename": "bbs-2.7-1.20.1.jar",
+            "url": "https://cdn.modrinth.com/data/ZeRO0IDA/versions/tD7xHigj/bbs-2.7-1.20.1.jar",
+            "sha512": "2d57180e2a7ba87dc5eda62a3a992ba9ef4957e39a44dcd3ee206adb7287def597a456cb61d0728ac37e05e84345db30c0ee9783ba1e9ac50385eb766251290b"
+        },
+        "1.21.1": {
+            "version": "2.7-1.21.1",
+            "version_id": "fY89JLFA",
+            "filename": "bbs-2.7-1.21.1.jar",
+            "url": "https://cdn.modrinth.com/data/ZeRO0IDA/versions/fY89JLFA/bbs-2.7-1.21.1.jar",
+            "sha512": "76cd3f1274953f604b63dd7ff2e7324f6a4c78f3094be2688c6641ffcc758b7bde4402977cd528a0b2c359aa936075a6a89d5b65667e51d08c033a9a117d2077"
+        }
+    }
+}
