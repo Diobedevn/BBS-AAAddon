@@ -23,6 +23,10 @@
         {
             "config": "bbs-aaaddon.bbs2.mixins.json",
             "environment": "client"
+        },
+        {
+            "config": "bbs-aaaddon.cml.mixins.json",
+            "environment": "client"
         }
     ],
     "entrypoints": {

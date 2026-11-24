@@ -1,0 +1,12 @@
+{
+    "required": true,
+    "package": "diobede.bbsaaa.mixin.cml",
+    "plugin": "diobede.bbsaaa.compat.host.CmlMixinPlugin",
+    "compatibilityLevel": "JAVA_${java_version}",
+    "client": [
+        "CmlTimelineMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}

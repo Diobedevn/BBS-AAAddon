@@ -125,3 +125,11 @@ no renderer or playback algorithm changes were needed for this target.
 The collected 1.20.1 JAR passed CML, FS and BBS 2 client checks and the BBS 2
 dedicated-server check. The 1.21.1 BBS 2 client was rechecked after extending
 host detection. The visual/native-effect and shader limitations above still apply.
+
+## CML timeline categories
+
+The canonical CML adapter supplies form-scoped presentation metadata to the published host timeline. CML still creates the collapsible groups, retains their disclosure state, and nests them under the owning bodypart. Stored track IDs and channels are unchanged. Shared IDs such as `paused` are classified only for this addon's form. The CML mixin is disabled on FS and BBS 2, and its helper is excluded from generated secondary adapters.
+
+AAA tracks share the localized AAA particles category.
+
+`tools/test-clients.py --host cml` exercises the installed distribution against the published host: actual timeline arrangement, form ownership, ordering, folded-state restoration, nested bodyparts, channel identity, and English/Spanish category switching. The timeline-specific checks are excluded from secondary-host smoke runs.
