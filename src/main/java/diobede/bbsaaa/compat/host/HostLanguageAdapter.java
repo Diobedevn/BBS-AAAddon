@@ -26,7 +26,21 @@ public final class HostLanguageAdapter implements LanguageAdapter
             return canonical.replace("diobede.bbsaaa.", "diobede.bbsaaa.fs.");
         }
 
+        if (isBbs2())
+        {
+            return canonical.replace("diobede.bbsaaa.", "diobede.bbsaaa.bbs2.");
+        }
+
         throw new IllegalStateException("Unsupported BBS host: " + host.getMetadata().getName() + " " + version);
+    }
+
+    public static boolean isBbs2()
+    {
+        return FabricLoader.getInstance().getModContainer("bbs").map(host ->
+            "BBS mod".equals(host.getMetadata().getName())
+                && ("2.5-1.20.1".equals(host.getMetadata().getVersion().getFriendlyString())
+                    || "2.5-1.21.1".equals(host.getMetadata().getVersion().getFriendlyString()))
+                && host.getMetadata().getCustomValue("bbs:fork_id") == null).orElse(false);
     }
 
     @Override

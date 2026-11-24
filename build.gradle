@@ -12,11 +12,13 @@ def target = minecraftTarget
 def official = target.namespace == 'official'
 apply plugin: official ? 'net.fabricmc.fabric-loom' : 'fabric-loom'
 ext.set('fabric.loom.runtimeJavaCompatibilityVersion', target.java.toString())
-if (providers.gradleProperty('fsCompileOnly').isPresent()) {
-    def hosts = new groovy.json.JsonSlurper().parse(file('gradle/fs-hosts.json'))
+def compatHost = providers.gradleProperty('compatHost').orNull ?: (providers.gradleProperty('fsCompileOnly').isPresent() ? 'fs' : null)
+if (compatHost != null) {
+    if (!(compatHost in ['fs', 'bbs2'])) throw new GradleException('Unsupported compatibility host: ' + compatHost)
+    def hosts = new groovy.json.JsonSlurper().parse(file("gradle/${compatHost ?: 'fs'}-hosts.json"))
     def fs = hosts.targets[minecraft_version]
     if (fs == null) throw new GradleException("No FS host for ${minecraft_version}")
-    ext.localCmlJar = file("build/fs-compat/${minecraft_version}/${fs.filename}")
+    ext.localCmlJar = file("build/${compatHost}-compat/${minecraft_version}/${fs.filename}")
 } else {
     apply from: 'gradle/local-cml.gradle'
 }
@@ -58,9 +60,9 @@ dependencies {
     add(scope, "net.fabricmc.fabric-api:fabric-api:${target.fabric}")
     if (providers.gradleProperty('distributionSmoke').isPresent()) {
         add('modCompileOnly', files(localCmlJar))
-        def fs = new groovy.json.JsonSlurper().parse(file('gradle/fs-hosts.json')).targets[minecraft_version]
         def host = providers.gradleProperty('smokeHost').getOrElse('cml')
-        add('modRuntimeOnly', files(host == 'fs' ? file("build/fs-compat/${minecraft_version}/${fs.filename}") : localCmlJar))
+        def fs = new groovy.json.JsonSlurper().parse(file("gradle/${host == 'cml' ? 'fs' : host}-hosts.json")).targets[minecraft_version]
+        add('modRuntimeOnly', files(host != 'cml' ? file("build/${host}-compat/${minecraft_version}/${fs.filename}") : localCmlJar))
         add('modRuntimeOnly', files("build/libs/${base.archivesName.get()}-${project.version}.jar"))
     } else {
         add(scope, files(localCmlJar))
@@ -84,6 +86,7 @@ processResources {
     def values = [version: project.version, minecraft_version: minecraft_version, java_version: target.java]
     inputs.properties values
     filesMatching('fabric.mod.json') { expand values }
+    filesMatching('*bbs2.mixins.json') { expand java_version: target.java }
     filesMatching('bbs-aaaddon.client.mixins.json') { expand java_version: target.java }
 }
 jar { from('LICENSE') { rename { "${it}_${project.base.archivesName.get()}" } } }

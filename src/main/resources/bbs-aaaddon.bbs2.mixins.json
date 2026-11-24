@@ -1,0 +1,14 @@
+{
+    "required": true,
+    "package": "diobede.bbsaaa.bbs2.compat.mixin",
+    "plugin": "diobede.bbsaaa.compat.host.Bbs2MixinPlugin",
+    "compatibilityLevel": "JAVA_${java_version}",
+    "client": [
+        "BbsClientMixin",
+        "FormCategoriesMixin",
+        "FilmShutdownMixin"
+    ],
+    "injectors": {
+        "defaultRequire": 1
+    }
+}

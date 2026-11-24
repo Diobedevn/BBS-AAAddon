@@ -1,20 +1,14 @@
 package diobede.bbsaaa.ui.forms.editors.panels;
 
-import diobede.bbsaaa.forms.AAAParticleForm;
-import diobede.bbsaaa.forms.renderers.BBSEffectLoader;
-import diobede.bbsaaa.forms.renderers.AAAParticleFormRenderer;
-import diobede.bbsaaa.particles.ParticleEffectIds;
-import diobede.bbsaaa.BBSAAaddon;
-
 import mchorse.bbs_mod.BBSMod;
 import mchorse.bbs_mod.forms.FormUtilsClient;
 import mchorse.bbs_mod.l10n.L10n;
 import mchorse.bbs_mod.l10n.keys.IKey;
 import mchorse.bbs_mod.ui.forms.editors.forms.UIForm;
 import mchorse.bbs_mod.ui.forms.editors.panels.UIFormPanel;
+import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIButton;
 import mchorse.bbs_mod.ui.framework.elements.buttons.UIToggle;
-import mchorse.bbs_mod.ui.framework.elements.UIElement;
 import mchorse.bbs_mod.ui.framework.elements.input.UITexturePicker;
 import mchorse.bbs_mod.ui.framework.elements.input.UITrackpad;
 import mchorse.bbs_mod.ui.framework.elements.overlay.UIListOverlayPanel;
@@ -27,6 +21,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import diobede.bbsaaa.BBSAAaddon;
+import diobede.bbsaaa.forms.AAAParticleForm;
+import diobede.bbsaaa.forms.renderers.AAAParticleFormRenderer;
+import diobede.bbsaaa.forms.renderers.BBSEffectLoader;
+import diobede.bbsaaa.particles.ParticleEffectIds;
 
 /**
  * AAA Particle Form Panel
@@ -187,7 +187,7 @@ public class UIAAAParticleFormPanel extends UIFormPanel<AAAParticleForm>
     {
         String currentEffect = this.getCurrentEffectId();
         this.pickEffect.label = currentEffect == null
-            ? L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.pick_effect") : IKey.raw(currentEffect);
+            ? L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.pick_effect") : IKey.constant(currentEffect);
     }
 
     @Override

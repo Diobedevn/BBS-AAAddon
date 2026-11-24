@@ -1,8 +1,12 @@
 package ports.smoke;
 
+import mchorse.bbs_mod.BBSModClient;
+import mchorse.bbs_mod.forms.FormCategories;
 import mchorse.bbs_mod.forms.FormUtils;
 import mchorse.bbs_mod.forms.FormUtilsClient;
+import mchorse.bbs_mod.l10n.L10n;
 import mchorse.bbs_mod.resources.Link;
+import mchorse.bbs_mod.ui.forms.editors.UIFormEditor;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -59,6 +63,19 @@ public final class AddonClientSmoke implements ClientModInitializer
         require(form.effect.get().equals(copy.effect.get()), "effect serialization");
         require(FormUtilsClient.getRenderer(form) instanceof AAAParticleFormRenderer, "renderer registration");
         require(new UIAAAParticleForm() != null, "editor construction");
+        require(UIFormEditor.createPanel(form) instanceof UIAAAParticleForm, "editor registration");
+        FormCategories categories = new FormCategories();
+        categories.setup();
+        require(categories.getAllCategories().stream().flatMap(category -> category.getForms().stream())
+            .anyMatch(entry -> entry instanceof AAAParticleForm), "palette registration");
+        int categoryCount = categories.getAllCategories().size();
+        categories.setup();
+        require(categories.getAllCategories().size() == categoryCount, "palette rebuild without duplicates");
+        BBSModClient.reloadLanguage("es_es");
+        require("Pausado".equals(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.paused").get()), "Spanish translation loading");
+        BBSModClient.reloadLanguage("en_us");
+        require("Paused".equals(L10n.lang("bbsaaa.ui.forms.editors.aaa_particle.paused").get()), "English translation switching");
+
         require(ParticleEffectIds.toLink(ParticleEffectIds.fromLink(form.effect.get())).equals(form.effect.get()), "identifier/link conversion");
         require("bbs:test".equals(NativeParticlePlatform.identifier("bbs", "test").toString()), "native identifier creation");
         NativeParticlePlatform.paused();

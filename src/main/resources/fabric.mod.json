@@ -19,6 +19,10 @@
         {
             "config": "bbs-aaaddon.client.mixins.json",
             "environment": "client"
+        },
+        {
+            "config": "bbs-aaaddon.bbs2.mixins.json",
+            "environment": "client"
         }
     ],
     "entrypoints": {
