@@ -1,6 +1,6 @@
 plugins {
-    id 'fabric-loom' version '1.17.21' apply false
-    id 'net.fabricmc.fabric-loom' version '1.17.21' apply false
+    id 'fabric-loom' version '1.19.4' apply false
+    id 'net.fabricmc.fabric-loom' version '1.19.4' apply false
     id 'maven-publish'
 }
 if (gradle.startParameter.taskNames.any { it.tokenize(':').last() == 'buildAll' }) {
@@ -18,9 +18,9 @@ if (compatHost != null) {
     def hosts = new groovy.json.JsonSlurper().parse(file("gradle/${compatHost ?: 'fs'}-hosts.json"))
     def fs = hosts.targets[minecraft_version]
     if (fs == null) throw new GradleException("No FS host for ${minecraft_version}")
-    ext.localCmlJar = file("build/${compatHost}-compat/${minecraft_version}/${fs.filename}")
+    ext.bbsHostJar = file("build/${compatHost}-compat/${minecraft_version}/${fs.filename}")
 } else {
-    apply from: 'gradle/local-cml.gradle'
+    apply from: 'gradle/cml-host.gradle'
 }
 version = project.mod_version + '-' + minecraft_version
 group = project.maven_group
@@ -59,13 +59,13 @@ dependencies {
     add(scope, "net.fabricmc:fabric-loader:${target.loader}")
     add(scope, "net.fabricmc.fabric-api:fabric-api:${target.fabric}")
     if (providers.gradleProperty('distributionSmoke').isPresent()) {
-        add('modCompileOnly', files(localCmlJar))
+        add('modCompileOnly', files(bbsHostJar))
         def host = providers.gradleProperty('smokeHost').getOrElse('cml')
         def fs = new groovy.json.JsonSlurper().parse(file("gradle/${host == 'cml' ? 'fs' : host}-hosts.json")).targets[minecraft_version]
-        add('modRuntimeOnly', files(host != 'cml' ? file("build/${host}-compat/${minecraft_version}/${fs.filename}") : localCmlJar))
+        add('modRuntimeOnly', files(host != 'cml' ? file("build/${host}-compat/${minecraft_version}/${fs.filename}") : bbsHostJar))
         add('modRuntimeOnly', files("build/libs/${base.archivesName.get()}-${project.version}.jar"))
     } else {
-        add(scope, files(localCmlJar))
+        add(scope, files(bbsHostJar))
     }
     add(scope, "maven.modrinth:sodium:${target.sodium}")
     add(scope, "maven.modrinth:iris:${target.iris}")
@@ -83,7 +83,7 @@ test { useJUnitPlatform() }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8'; options.release = target.java }
 java { sourceCompatibility = JavaVersion.toVersion(target.java); targetCompatibility = JavaVersion.toVersion(target.java) }
 processResources {
-    def values = [version: project.version, minecraft_version: minecraft_version, java_version: target.java]
+    def values = [version: project.version, minecraft_version: minecraft_version, java_version: target.java, cml_minimum_version: cmlMinimumVersion]
     inputs.properties values
     filesMatching('fabric.mod.json') { expand values }
     filesMatching('*bbs2.mixins.json') { expand java_version: target.java }

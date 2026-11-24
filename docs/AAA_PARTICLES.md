@@ -5,7 +5,7 @@ Saved property names and effect links remain unchanged.
 
 ## Build
 
-The shared base targets Fabric 1.20.1, 1.21.1 and 26.1.2. Run the wrapper with JDK 25; the selected target emits Java 17, 21 or 25 bytecode. Place matching CML JARs in libs and run `./gradlew buildAll`; all installable JARs appear in build/libs. `./gradlew build -Pmc=1.21.1` builds one target. See [multiversion setup and validation](multiversion.md) for adapter boundaries, dependency selection and runtime checks.
+The shared base targets Fabric 1.20.1, 1.21.1 and 26.1.2. Run the wrapper with JDK 25; the selected target emits Java 17, 21 or 25 bytecode. The build downloads the published CML beta pinned in `gradle/cml-hosts.json`; run `./gradlew buildAll` without a local CML build or manual host JARs; all installable JARs appear in build/libs. `./gradlew build -Pmc=1.21.1` builds one target. See [multiversion setup and validation](multiversion.md) for adapter boundaries, dependency selection and runtime checks.
 
 ## Effects
 

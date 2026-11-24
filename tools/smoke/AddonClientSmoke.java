@@ -10,6 +10,7 @@ import mchorse.bbs_mod.ui.forms.editors.UIFormEditor;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.loader.api.FabricLoader;
 
 import diobede.bbsaaa.forms.AAAParticleForm;
 import diobede.bbsaaa.forms.renderers.AAAParticleFormRenderer;
@@ -52,6 +53,7 @@ public final class AddonClientSmoke implements ClientModInitializer
 
     private void check()
     {
+        System.out.println("[Addon host version] " + FabricLoader.getInstance().getModContainer("bbs").orElseThrow().getMetadata().getVersion().getFriendlyString());
         AAAParticleForm form = new AAAParticleForm();
         System.out.println("[Addon host] " + form.getClass().getProtectionDomain().getCodeSource().getLocation());
         form.effect.set(Link.create("bbs:effeks/validation/test.efkefc"));

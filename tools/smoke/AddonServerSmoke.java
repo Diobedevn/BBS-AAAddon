@@ -6,6 +6,7 @@ import mchorse.bbs_mod.resources.Link;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.InputStream;
 
@@ -19,6 +20,7 @@ public final class AddonServerSmoke implements ModInitializer
     {
         ServerLifecycleEvents.SERVER_STARTED.register(server ->
         {
+            System.out.println("[Addon host version] " + FabricLoader.getInstance().getModContainer("bbs").orElseThrow().getMetadata().getVersion().getFriendlyString());
             AAAParticleForm form = new AAAParticleForm();
             if (!(FormUtils.fromData(FormUtils.toData(form)) instanceof AAAParticleForm))
             {
