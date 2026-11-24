@@ -54,6 +54,10 @@ preview post-graph and framebuffer/viewport/scissor restoration checks. AAA's 24
 playback unit tests passed across its three targets. These checks do not replace
 visual world/film playback and shader validation before publication.
 
+## Secondary host adapters
+
+`gradle/host-compat.gradle` packages optional adapters around the primary CML implementation. Its helper scripts require an explicit secondary host, for example `python tools/build_host_compat.py --host bbs2 --mc 1.21.1`. Names such as `fs-hosts.json`, `compileFsCompatibility` and `build/fs-compat/` remain FS-specific; they do not select the primary host. `-PcompatHost=fs` or `-PcompatHost=bbs2` is reserved for isolated adapter compilation. The older `-PfsCompileOnly` remains an explicit FS-only alias; it does not affect the default CML build.
+
 ## Upstream BBS 2 adapter
 
 The existing source generator accepts `--host bbs2`; it emits isolated `.bbs2`

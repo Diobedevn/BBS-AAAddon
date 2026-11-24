@@ -23,8 +23,11 @@ def runtimeHome = providers.gradleProperty('runJavaHome').orNull ?: runtimes.get
 if (runtimeHome == null) throw new GradleException('Set -PrunJavaHome or gradle/local-runtime.properties for the matching client Java version.')
 tasks.withType(JavaExec).configureEach { executable = new File(runtimeHome, 'bin/java.exe') }
 
-sourceSets.portSmoke.compileClasspath += files("build/${providers.gradleProperty('smokeHost').getOrElse('fs')}-compat/${minecraft_version}/classes-build/classes/java/main",
-    "build/${providers.gradleProperty('smokeHost').getOrElse('fs')}-compat/${minecraft_version}/classes-build/classes/java/client")
+def smokeHost = providers.gradleProperty('smokeHost').getOrElse('cml')
+if (smokeHost != 'cml') {
+    sourceSets.portSmoke.compileClasspath += files("build/${smokeHost}-compat/${minecraft_version}/classes-build/classes/java/main",
+        "build/${smokeHost}-compat/${minecraft_version}/classes-build/classes/java/client")
+}
 if (providers.gradleProperty('distributionSmoke').isPresent()) {
     [tasks.named('runClient'), tasks.named('runServer')].each { task -> task.configure {
         def excluded = (sourceSets.main.output.files + sourceSets.client.output.files).collect { it.canonicalFile }
